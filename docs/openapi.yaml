@@ -1,0 +1,233 @@
+openapi: 3.0.3
+info:
+  title: Wardrobe IQ API
+  version: 0.1.0
+  description: Phase 1 MVP API. AI/ML is intentionally disabled; recommendation and chat contracts are ready for future intelligence.
+servers:
+  - url: http://localhost:4000/api/v1
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AuthTokens:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+    ClothingItem:
+      type: object
+      properties:
+        id:
+          type: string
+        imageUrl:
+          type: string
+        category:
+          type: string
+        subcategory:
+          type: string
+        color:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        occasion:
+          type: array
+          items:
+            type: string
+        season:
+          type: array
+          items:
+            type: string
+    Outfit:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        itemIds:
+          type: array
+          items:
+            type: string
+        occasion:
+          type: string
+        liked:
+          type: boolean
+        saved:
+          type: boolean
+paths:
+  /health:
+    get:
+      security: []
+      summary: Health check
+      responses:
+        "200":
+          description: API is healthy
+  /auth/register:
+    post:
+      security: []
+      summary: Register a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+      responses:
+        "201":
+          description: User registered
+  /auth/login:
+    post:
+      security: []
+      summary: Log in
+      responses:
+        "200":
+          description: Auth tokens returned
+  /auth/refresh:
+    post:
+      security: []
+      summary: Rotate refresh token and return a new access token
+      responses:
+        "200":
+          description: Token pair returned
+  /users/me:
+    get:
+      summary: Get current profile
+      responses:
+        "200":
+          description: Profile returned
+    patch:
+      summary: Update current profile
+      responses:
+        "200":
+          description: Profile updated
+  /users/me/preferences:
+    patch:
+      summary: Update wardrobe preferences
+      responses:
+        "200":
+          description: Preferences updated
+  /wardrobe:
+    get:
+      summary: List wardrobe items
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated wardrobe items
+    post:
+      summary: Create clothing item with multipart image or imageUrl
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                category:
+                  type: string
+      responses:
+        "201":
+          description: Clothing item created
+  /wardrobe/{id}:
+    get:
+      summary: Get clothing item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Clothing item returned
+    patch:
+      summary: Update clothing item
+      responses:
+        "200":
+          description: Clothing item updated
+    delete:
+      summary: Delete clothing item
+      responses:
+        "204":
+          description: Deleted
+  /outfits:
+    get:
+      summary: List outfits
+      responses:
+        "200":
+          description: Paginated outfits
+    post:
+      summary: Create outfit
+      responses:
+        "201":
+          description: Outfit created
+  /outfits/{id}:
+    get:
+      summary: Get outfit
+      responses:
+        "200":
+          description: Outfit returned
+    patch:
+      summary: Update outfit
+      responses:
+        "200":
+          description: Outfit updated
+    delete:
+      summary: Delete outfit
+      responses:
+        "204":
+          description: Deleted
+  /recommendations/outfits:
+    get:
+      summary: Return mock rule-based outfit suggestions
+      responses:
+        "200":
+          description: Suggestions returned
+  /feedback:
+    get:
+      summary: List feedback
+      responses:
+        "200":
+          description: Feedback returned
+    post:
+      summary: Store outfit feedback action
+      responses:
+        "201":
+          description: Feedback stored
+  /analytics/wardrobe:
+    get:
+      summary: Wardrobe stats and usage analytics
+      responses:
+        "200":
+          description: Analytics returned
+  /uploads/image:
+    post:
+      summary: Upload image to Cloudinary
+      responses:
+        "201":
+          description: Image uploaded
+  /chat/message:
+    post:
+      summary: Placeholder chat response for future NLP
+      responses:
+        "200":
+          description: Placeholder response returned

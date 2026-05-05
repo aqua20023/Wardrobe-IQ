@@ -1,0 +1,97 @@
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useMemo, useState } from "react";
+import { Text, View } from "react-native";
+import { getApiErrorMessage } from "../../../api/client";
+import { Button } from "../../../components/ui/Button";
+import { Chip } from "../../../components/ui/Chip";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import { Input } from "../../../components/ui/Input";
+import { LoadingSkeleton } from "../../../components/ui/LoadingSkeleton";
+import { Screen } from "../../../components/ui/Screen";
+import { WardrobeItemCard } from "../../../components/ui/WardrobeItemCard";
+import type { RootStackParamList } from "../../../navigation/types";
+import { occasions } from "../../../theme/options";
+import type { Occasion } from "../../../types/domain";
+import { useWardrobe } from "../../wardrobe/hooks/useWardrobe";
+import { useCreateOutfit } from "../hooks/useOutfits";
+
+type Props = NativeStackScreenProps<RootStackParamList, "OutfitBuilder">;
+
+export function OutfitBuilderScreen({ route, navigation }: Props) {
+  const initialItemId = route.params?.initialItemId;
+  const wardrobe = useWardrobe({ sort: "newest" });
+  const createOutfit = useCreateOutfit();
+  const [selectedIds, setSelectedIds] = useState<string[]>(initialItemId ? [initialItemId] : []);
+  const [title, setTitle] = useState("");
+  const [occasion, setOccasion] = useState<Occasion>("casual");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const selectedItems = useMemo(
+    () => wardrobe.data?.items.filter((item) => selectedIds.includes(item.id ?? item._id!)) ?? [],
+    [wardrobe.data?.items, selectedIds]
+  );
+
+  function toggle(id: string) {
+    setSelectedIds((current) => (current.includes(id) ? current.filter((itemId) => itemId !== id) : [...current, id]));
+  }
+
+  async function save() {
+    if (!title.trim()) {
+      setError("Give this outfit a title.");
+      return;
+    }
+    if (!selectedIds.length) {
+      setError("Select at least one wardrobe item.");
+      return;
+    }
+
+    try {
+      setError(null);
+      await createOutfit.mutateAsync({ title: title.trim(), itemIds: selectedIds, occasion, notes, saved: true });
+      navigation.goBack();
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    }
+  }
+
+  return (
+    <Screen>
+      <Text className="text-3xl font-semibold text-mist">Build outfit</Text>
+      <Text className="mt-2 text-base leading-6 text-stone">Select pieces manually and save the combination for later.</Text>
+
+      <View className="mt-6 gap-4">
+        <Input label="Outfit title" value={title} onChangeText={setTitle} placeholder="Monday office, dinner uniform" />
+        <View>
+          <Text className="mb-1 text-sm font-medium text-stone">Occasion</Text>
+          <View className="flex-row flex-wrap">
+            {occasions.map((value) => (
+              <Chip key={value} label={value} selected={occasion === value} onPress={() => setOccasion(value)} />
+            ))}
+          </View>
+        </View>
+        <Input label="Notes" value={notes} onChangeText={setNotes} multiline className="min-h-[88px] pt-4" placeholder="Why this works, fit details, styling reminders" />
+      </View>
+
+      <View className="mt-8">
+        <Text className="mb-4 text-lg font-semibold text-mist">Selected pieces ({selectedItems.length})</Text>
+        {wardrobe.isLoading ? <LoadingSkeleton rows={3} /> : null}
+        {!wardrobe.isLoading && !wardrobe.data?.items.length ? (
+          <EmptyState title="No wardrobe items" body="Add clothing items before building outfits." />
+        ) : (
+          <View className="flex-row flex-wrap justify-between">
+            {wardrobe.data?.items.map((item) => {
+              const id = item.id ?? item._id!;
+              return <WardrobeItemCard key={id} item={item} selected={selectedIds.includes(id)} onPress={() => toggle(id)} />;
+            })}
+          </View>
+        )}
+      </View>
+
+      {error ? <Text className="mt-3 text-sm text-oxblood">{error}</Text> : null}
+      <View className="mt-5">
+        <Button label="Save Outfit" loading={createOutfit.isPending} onPress={save} icon="bookmark-outline" />
+      </View>
+    </Screen>
+  );
+}

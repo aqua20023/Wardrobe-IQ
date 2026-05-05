@@ -1,0 +1,88 @@
+{
+  "info": {
+    "name": "Wardrobe IQ API",
+    "_postman_id": "bcb498b2-9f6d-4ef2-bc35-9f0f7e0d0001",
+    "description": "Phase 1 MVP collection. Set baseUrl and bearerToken collection variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api/v1" },
+    { "key": "bearerToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+    },
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Demo Stylist\",\n  \"email\": \"demo@wardrobeiq.app\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": "{{baseUrl}}/auth/register"
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"demo@wardrobeiq.app\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "List Wardrobe",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{bearerToken}}" }],
+        "url": "{{baseUrl}}/wardrobe"
+      }
+    },
+    {
+      "name": "Create Outfit",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Weekend base\",\n  \"itemIds\": [],\n  \"occasion\": \"casual\",\n  \"saved\": true\n}"
+        },
+        "url": "{{baseUrl}}/outfits"
+      }
+    },
+    {
+      "name": "Recommendations",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{bearerToken}}" }],
+        "url": "{{baseUrl}}/recommendations/outfits?occasion=casual"
+      }
+    },
+    {
+      "name": "Chat Placeholder",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"What should I wear today?\"\n}"
+        },
+        "url": "{{baseUrl}}/chat/message"
+      }
+    }
+  ]
+}

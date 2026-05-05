@@ -1,0 +1,27 @@
+{
+  "name": "wardrobe-iq",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Wardrobe IQ Phase 1 MVP monorepo with Expo mobile app and Express API.",
+  "workspaces": [
+    "mobile",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace server",
+    "dev:server": "npm run dev --workspace server",
+    "dev:mobile": "npm run start --workspace mobile",
+    "build": "npm run build --workspace server && npm run typecheck --workspace mobile",
+    "typecheck": "npm run typecheck --workspace server && npm run typecheck --workspace mobile",
+    "lint": "npm run lint --workspace server && npm run lint --workspace mobile",
+    "seed": "npm run seed --workspace server"
+  },
+  "engines": {
+    "node": ">=20.19.4",
+    "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "react-native-worklets": "^0.7.4"
+  }
+}
