@@ -2,7 +2,7 @@ import type { FilterQuery } from "mongoose";
 import { cacheDeleteByPrefix, cacheGet, cacheSet } from "../../config/redis";
 import { AppError } from "../../common/utils/AppError";
 import { uploadBufferToCloudinary } from "../uploads/upload.service";
-import { predictCategory } from "../../services/ai.service";
+import { predictCategory, predictColor } from "../../services/ai.service";
 import { ClothingItemModel, type ClothingItem } from "./clothingItem.model";
 import { wardrobeRepository } from "./wardrobe.repository";
 import type { createClothingItemSchema, updateClothingItemSchema, wardrobeQuerySchema } from "./wardrobe.validators";
@@ -62,6 +62,8 @@ export const wardrobeService = {
     let predictedCategory: string;
     let rawLabel: string;
     let confidence: number;
+    let primaryColor: string;
+    let secondaryColors: string[];
 
     if (input.predictedCategory !== undefined && input.confidence !== undefined) {
       // Client already surfaced the AI suggestion to the user and echoed it back.
@@ -69,18 +71,27 @@ export const wardrobeService = {
       predictedCategory = input.predictedCategory;
       rawLabel = input.predictedCategory; // client path has no separate raw label
       confidence = input.confidence;
+      // Note: Frontend does not yet submit color, so fetch it now.
+      const aiColor = await predictColor(imageUrl);
+      primaryColor = aiColor.primaryColor;
+      secondaryColors = aiColor.secondaryColors;
     } else {
       // No client hint — run a live server-side prediction now.
-      const aiPrediction = await predictCategory(imageUrl);
+      const [aiPrediction, aiColor] = await Promise.all([
+        predictCategory(imageUrl),
+        predictColor(imageUrl)
+      ]);
       predictedCategory = aiPrediction.category;  // mapped WardrobeCategory
       rawLabel = aiPrediction.rawLabel;            // original FastAPI label
       confidence = aiPrediction.confidence;
+      primaryColor = aiColor.primaryColor;
+      secondaryColors = aiColor.secondaryColors;
     }
 
     const finalCategory = input.category;
     const userCorrected = predictedCategory !== "other" && predictedCategory !== finalCategory;
 
-    const aiMetadata = { predictedCategory, rawLabel, finalCategory, confidence, userCorrected };
+    const aiMetadata = { predictedCategory, rawLabel, finalCategory, confidence, userCorrected, primaryColor, secondaryColors };
 
     // Strip AI hint fields before persisting — they live in aiMetadata only
     const { predictedCategory: _pc, confidence: _conf, ...itemInput } = input;
@@ -154,7 +165,10 @@ export const wardrobeService = {
    */
   async predict(userId: string, file: Express.Multer.File) {
     const upload = await uploadBufferToCloudinary(file, `wardrobe-iq/${userId}/wardrobe/preview`);
-    const prediction = await predictCategory(upload.imageUrl);
+    const [prediction, colorPrediction] = await Promise.all([
+      predictCategory(upload.imageUrl),
+      predictColor(upload.imageUrl)
+    ]);
     return {
       imageUrl: upload.imageUrl,
       imagePublicId: upload.publicId,
@@ -162,7 +176,9 @@ export const wardrobeService = {
       predictedCategory: prediction.category,
       /** Original FastAPI label before mapping — informational only. */
       rawLabel: prediction.rawLabel,
-      confidence: prediction.confidence
+      confidence: prediction.confidence,
+      primaryColor: colorPrediction.primaryColor,
+      secondaryColors: colorPrediction.secondaryColors
     };
   }
 };

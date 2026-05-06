@@ -10,22 +10,18 @@ Output: FloatTensor of shape (1, 3, 224, 224), ready for model inference.
 
 from __future__ import annotations
 
-import io
 import logging
 
-import requests
 import torch
-from PIL import Image
 from torchvision import transforms
+
+from app.common.image import download_image
 
 logger = logging.getLogger(__name__)
 
 # ImageNet normalization constants
 _IMAGENET_MEAN = (0.485, 0.456, 0.406)
 _IMAGENET_STD = (0.229, 0.224, 0.225)
-
-_DOWNLOAD_TIMEOUT_SECONDS = 10
-_MAX_IMAGE_BYTES = 10 * 1024 * 1024  # 10 MB guard
 
 _transform = transforms.Compose([
     transforms.Resize(256),
@@ -50,22 +46,6 @@ def preprocess_from_url(image_url: str) -> torch.Tensor:
         OSError: if the response body is not a valid image.
         ValueError: if the downloaded content exceeds the size limit.
     """
-    logger.debug("Downloading image from %s", image_url)
-
-    response = requests.get(
-        image_url,
-        timeout=_DOWNLOAD_TIMEOUT_SECONDS,
-        stream=True,
-    )
-    response.raise_for_status()
-
-    # Guard against excessively large payloads
-    raw = response.content
-    if len(raw) > _MAX_IMAGE_BYTES:
-        raise ValueError(
-            f"Image exceeds maximum allowed size of {_MAX_IMAGE_BYTES // (1024 * 1024)} MB."
-        )
-
-    image = Image.open(io.BytesIO(raw)).convert("RGB")
+    image = download_image(image_url)
     tensor: torch.Tensor = _transform(image)
     return tensor.unsqueeze(0)  # add batch dimension → (1, 3, 224, 224)

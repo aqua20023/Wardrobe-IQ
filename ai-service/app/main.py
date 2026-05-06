@@ -22,6 +22,8 @@ import torch.nn as nn
 from fastapi import FastAPI
 from pydantic import BaseModel, HttpUrl
 
+from app.color import extract_dominant_colors
+from app.common.image import download_image
 from app.ml.inference import predict
 from app.ml.model_loader import load_model
 from app.ml.preprocess import preprocess_from_url
@@ -90,7 +92,13 @@ class CategoryResponse(BaseModel):
     confidence: float
 
 
-_FALLBACK = CategoryResponse(category="unknown", confidence=0.0)
+class ColorResponse(BaseModel):
+    primary_color: str
+    secondary_colors: list[str]
+
+
+_FALLBACK_CATEGORY = CategoryResponse(category="unknown", confidence=0.0)
+_FALLBACK_COLOR = ColorResponse(primary_color="unknown", secondary_colors=[])
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -117,21 +125,48 @@ def predict_category(payload: ImageRequest) -> CategoryResponse:
     """
     if state.model is None:
         logger.warning("predict_category called but model is not loaded.")
-        return _FALLBACK
+        return _FALLBACK_CATEGORY
 
     try:
         tensor = preprocess_from_url(payload.image_url)
     except ValueError as exc:
         logger.warning("Image validation failed for %s: %s", payload.image_url, exc)
-        return _FALLBACK
+        return _FALLBACK_CATEGORY
     except Exception as exc:
         logger.warning("Image download/decode failed for %s: %s", payload.image_url, exc)
-        return _FALLBACK
+        return _FALLBACK_CATEGORY
 
     try:
         label, confidence = predict(state.model, tensor)
     except Exception as exc:
         logger.error("Model inference failed: %s", exc)
-        return _FALLBACK
+        return _FALLBACK_CATEGORY
 
     return CategoryResponse(category=label, confidence=confidence)
+
+
+@app.post("/predict/color", response_model=ColorResponse, tags=["inference"])
+def predict_color(payload: ImageRequest) -> ColorResponse:
+    """
+    Extract the dominant colors for the image at `image_url`.
+
+    Returns the primary color and up to 2 secondary colors.
+    On any failure (download error, invalid image, clustering error) returns:
+        { "primary_color": "unknown", "secondary_colors": [] }
+    """
+    try:
+        image = download_image(payload.image_url)
+    except ValueError as exc:
+        logger.warning("Color extraction image validation failed for %s: %s", payload.image_url, exc)
+        return _FALLBACK_COLOR
+    except Exception as exc:
+        logger.warning("Color extraction image download failed for %s: %s", payload.image_url, exc)
+        return _FALLBACK_COLOR
+
+    try:
+        primary, secondary = extract_dominant_colors(image)
+    except Exception as exc:
+        logger.error("Color extraction failed: %s", exc)
+        return _FALLBACK_COLOR
+
+    return ColorResponse(primary_color=primary, secondary_colors=secondary)

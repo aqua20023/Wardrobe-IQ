@@ -18,7 +18,13 @@ export interface AiPrediction {
   confidence: number;
 }
 
-const PREDICT_ENDPOINT = `${env.AI_SERVICE_URL}/predict/category`;
+export interface AiColorPrediction {
+  primaryColor: string;
+  secondaryColors: string[];
+}
+
+const PREDICT_CATEGORY_ENDPOINT = `${env.AI_SERVICE_URL}/predict/category`;
+const PREDICT_COLOR_ENDPOINT = `${env.AI_SERVICE_URL}/predict/color`;
 const REQUEST_TIMEOUT_MS = 10_000; // don't block uploads on a slow AI service
 
 /**
@@ -33,7 +39,7 @@ const REQUEST_TIMEOUT_MS = 10_000; // don't block uploads on a slow AI service
 export async function predictCategory(imageUrl: string): Promise<AiPrediction> {
   try {
     const response = await axios.post<FastApiPrediction>(
-      PREDICT_ENDPOINT,
+      PREDICT_CATEGORY_ENDPOINT,
       { image_url: imageUrl },
       { timeout: REQUEST_TIMEOUT_MS }
     );
@@ -45,5 +51,29 @@ export async function predictCategory(imageUrl: string): Promise<AiPrediction> {
   } catch (error) {
     console.error("[AI Service] predictCategory failed:", (error as Error).message);
     return { category: "other", rawLabel: "unknown", confidence: 0 };
+  }
+}
+
+/**
+ * Calls the FastAPI AI service to extract dominant colors for a given image URL.
+ *
+ * - Returns a safe fallback (primaryColor: "unknown", secondaryColors: []) if the
+ *   service is unreachable or returns an error.
+ *
+ * @param imageUrl - Publicly accessible Cloudinary URL of the uploaded image.
+ */
+export async function predictColor(imageUrl: string): Promise<AiColorPrediction> {
+  try {
+    const response = await axios.post<{ primary_color: string; secondary_colors: string[] }>(
+      PREDICT_COLOR_ENDPOINT,
+      { image_url: imageUrl },
+      { timeout: REQUEST_TIMEOUT_MS }
+    );
+
+    const { primary_color, secondary_colors } = response.data;
+    return { primaryColor: primary_color, secondaryColors: secondary_colors };
+  } catch (error) {
+    console.error("[AI Service] predictColor failed:", (error as Error).message);
+    return { primaryColor: "unknown", secondaryColors: [] };
   }
 }

@@ -66,6 +66,8 @@ export type AiPrediction = {
   imagePublicId: string;
   predictedCategory: WardrobeCategory | "unknown";
   confidence: number;
+  primaryColor?: string;
+  secondaryColors?: string[];
 };
 
 export type Outfit = {

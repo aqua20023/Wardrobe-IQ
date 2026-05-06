@@ -3,6 +3,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Controller, useForm } from "react-hook-form";
+import { useState } from "react";
 import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 import { z } from "zod";
 import { getApiErrorMessage } from "../../../api/client";
@@ -59,6 +60,8 @@ export function AddItemScreen({ navigation }: Props) {
   const predictedCategory = watch("predictedCategory");
   const confidence = watch("confidence");
 
+  const [secondaryColors, setSecondaryColors] = useState<string[]>([]);
+
   // Has the user overridden the AI suggestion?
   const isAiCorrected =
     predictedCategory !== undefined &&
@@ -101,6 +104,16 @@ export function AddItemScreen({ navigation }: Props) {
       if (prediction.predictedCategory !== "unknown") {
         setValue("predictedCategory", prediction.predictedCategory);
         setValue("category", prediction.predictedCategory as WardrobeCategory);
+      }
+
+      if (prediction.primaryColor && prediction.primaryColor !== "unknown") {
+        setValue("color", prediction.primaryColor);
+      }
+
+      if (prediction.secondaryColors && prediction.secondaryColors.length > 0) {
+        setSecondaryColors(prediction.secondaryColors);
+      } else {
+        setSecondaryColors([]);
       }
     } catch {
       // Non-fatal — user can still fill the form manually
@@ -223,7 +236,16 @@ export function AddItemScreen({ navigation }: Props) {
         </View>
 
         <Controller control={control} name="subcategory" render={({ field: { onChange, value } }) => <Input label="Subcategory" placeholder="Oxford shirt, denim, loafers" value={value} onChangeText={onChange} />} />
-        <Controller control={control} name="color" render={({ field: { onChange, value } }) => <Input label="Color" placeholder="Black, ivory, navy" value={value} onChangeText={onChange} />} />
+        
+        <View>
+          <Controller control={control} name="color" render={({ field: { onChange, value } }) => <Input label="Color" placeholder="Black, ivory, navy" value={value} onChangeText={onChange} />} />
+          {secondaryColors.length > 0 && (
+            <Text className="mt-2 text-sm text-stone">
+              Other detected colors: <Text className="text-mist">{secondaryColors.join(", ")}</Text>
+            </Text>
+          )}
+        </View>
+
         <Controller control={control} name="tagsText" render={({ field: { onChange, value } }) => <Input label="Tags" placeholder="favorite, linen, minimal" value={value} onChangeText={onChange} />} />
 
         {/* ── Occasion ── */}

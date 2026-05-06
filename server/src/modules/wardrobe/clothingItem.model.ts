@@ -33,7 +33,9 @@ const clothingItemSchema = new Schema(
       rawLabel: { type: String },        // raw FastAPI label e.g. "shirt", "t-shirt"
       finalCategory: { type: String },
       confidence: { type: Number },
-      userCorrected: { type: Boolean, default: false }
+      userCorrected: { type: Boolean, default: false },
+      primaryColor: { type: String },
+      secondaryColors: { type: [String], default: [] }
     }
   },
   { timestamps: true, versionKey: false }
