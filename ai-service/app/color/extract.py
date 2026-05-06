@@ -29,8 +29,15 @@ def extract_dominant_colors(image: Image.Image) -> tuple[str, list[str]]:
     Returns:
         A tuple of (primary_color, [secondary_colors...]).
     """
-    # 1. Resize for performance and flatten to a list of RGB pixels
-    img_resized = image.resize(_WORKING_SIZE)
+    # 1. Crop center region (65%) to minimize background bleed
+    width, height = image.size
+    crop_w, crop_h = int(width * 0.65), int(height * 0.65)
+    left = (width - crop_w) // 2
+    top = (height - crop_h) // 2
+    img_cropped = image.crop((left, top, left + crop_w, top + crop_h))
+
+    # 2. Resize for performance and flatten to a list of RGB pixels
+    img_resized = img_cropped.resize(_WORKING_SIZE)
     img_data = np.array(img_resized)
     pixels = img_data.reshape(-1, 3)
 

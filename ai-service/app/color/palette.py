@@ -8,18 +8,51 @@ import math
 
 # Base palette mapping a human-readable name to its typical RGB centroid.
 PALETTE = {
+    # Neutrals
     "black": (0, 0, 0),
-    "white": (255, 255, 255),
+    "charcoal": (54, 69, 79),
     "gray": (128, 128, 128),
-    "navy": (0, 0, 128),
-    "blue": (0, 0, 255),
-    "red": (255, 0, 0),
-    "green": (0, 128, 0),
-    "brown": (165, 42, 42),
+    "silver": (192, 192, 192),
+    "white": (255, 255, 255),
+    "ivory": (255, 255, 240),
+    "cream": (255, 253, 208),
     "beige": (245, 245, 220),
-    "yellow": (255, 255, 0),
+    "tan": (210, 180, 140),
+    "khaki": (195, 176, 145),
+
+    # Blues
+    "navy": (0, 0, 128),
+    "cobalt": (0, 71, 171),
+    "blue": (0, 0, 255),
+    "sky blue": (135, 206, 235),
+    "teal": (0, 128, 128),
+
+    # Reds / Pinks
+    "red": (255, 0, 0),
+    "maroon": (128, 0, 0),
+    "burgundy": (128, 0, 32),
     "pink": (255, 192, 203),
+    "blush": (222, 93, 131),
+
+    # Greens
+    "green": (0, 128, 0),
+    "olive": (128, 128, 0),
+    "sage": (188, 184, 138),
+
+    # Yellows / Oranges
+    "yellow": (255, 255, 0),
+    "mustard": (255, 219, 88),
+    "orange": (255, 165, 0),
+    "rust": (183, 65, 14),
+
+    # Browns
+    "brown": (165, 42, 42),
+    "camel": (193, 154, 107),
+    "taupe": (72, 60, 50),
+
+    # Purples
     "purple": (128, 0, 128),
+    "lavender": (230, 230, 250),
 }
 
 def get_closest_color(rgb: tuple[int, int, int] | tuple[float, float, float]) -> str:

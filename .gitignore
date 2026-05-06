@@ -65,9 +65,6 @@ temp/
 # -----------------------------
 ai-service/data/dataset_a_raw/
 ai-service/data/dataset_a_processed/
-ai-service/models/category_classifier.pth
-ai-service/models/*.pt
-ai-service/models/*.pth
 ai-service/__pycache__/
 ai-service/.pytest_cache/
 
