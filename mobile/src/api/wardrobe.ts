@@ -82,16 +82,26 @@ export const wardrobeApi = {
   },
 
   async create(input: ClothingItemInput) {
-    const response = await apiClient.post<ApiEnvelope<ClothingItem>>("/wardrobe", toFormData(input), {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+    if (input.imageUri) {
+      const response = await apiClient.post<ApiEnvelope<ClothingItem>>("/wardrobe", toFormData(input), {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      return response.data.data;
+    }
+
+    const response = await apiClient.post<ApiEnvelope<ClothingItem>>("/wardrobe", input);
     return response.data.data;
   },
 
   async update(id: string, input: ClothingItemInput) {
-    const response = await apiClient.patch<ApiEnvelope<ClothingItem>>(`/wardrobe/${id}`, toFormData(input), {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+    if (input.imageUri) {
+      const response = await apiClient.patch<ApiEnvelope<ClothingItem>>(`/wardrobe/${id}`, toFormData(input), {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      return response.data.data;
+    }
+
+    const response = await apiClient.patch<ApiEnvelope<ClothingItem>>(`/wardrobe/${id}`, input);
     return response.data.data;
   },
 

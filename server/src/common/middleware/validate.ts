@@ -31,6 +31,8 @@ export const validate =
     }
 
     if (errors.length) {
+      console.error(`[Validation Error] ${req.method} ${req.originalUrl}`);
+      console.dir({ details: errors }, { depth: null, colors: true });
       return next(new AppError("Validation failed", 400, errors));
     }
 

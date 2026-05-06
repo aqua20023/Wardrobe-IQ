@@ -6,13 +6,9 @@ To add a new class, append to CATEGORY_LABELS and retrain the model.
 """
 
 CATEGORY_LABELS: list[str] = [
+    "jacket",
     "shirt",
     "t-shirt",
-    "jeans",
-    "trousers",
-    "dress",
-    "jacket",
-    "shoes",
 ]
 
 NUM_CLASSES: int = len(CATEGORY_LABELS)

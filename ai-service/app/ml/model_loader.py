@@ -2,7 +2,7 @@
 Model loader for the clothing category classifier.
 
 Responsibilities:
-- Build MobileNetV2 architecture with a 7-class head.
+- Build MobileNetV2 architecture with a dynamic n-class head.
 - Load fine-tuned weights from disk (once at startup).
 - Return the model in eval() mode, ready for inference.
 
@@ -31,8 +31,7 @@ _WEIGHTS_PATH = Path(__file__).resolve().parents[2] / "models" / "category_class
 def _build_mobilenetv2(num_classes: int) -> nn.Module:
     """Return a MobileNetV2 with the final classifier head replaced."""
     model = models.mobilenet_v2(weights=None)
-    in_features: int = model.classifier[1].in_features
-    model.classifier[1] = nn.Linear(in_features, num_classes)
+    model.classifier[1] = nn.Linear(model.last_channel, num_classes)
     return model
 
 
