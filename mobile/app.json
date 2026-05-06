@@ -17,9 +17,14 @@
     "android": {
       "package": "app.wardrobeiq.mobile"
     },
-    "plugins": ["expo-secure-store"],
+    "plugins": [
+      "expo-secure-store"
+    ],
     "extra": {
-      "apiUrl": "http://localhost:4000/api/v1"
+      "apiUrl": "http://localhost:4000/api/v1",
+      "eas": {
+        "projectId": "7a311ece-cd5e-4563-9202-1eb54697d284"
+      }
     }
   }
 }

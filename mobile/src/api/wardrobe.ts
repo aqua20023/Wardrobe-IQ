@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import type { ApiEnvelope, ClothingItem, Occasion, PaginatedWardrobe, Season, WardrobeCategory } from "../types/domain";
+import type { AiPrediction, ApiEnvelope, ClothingItem, Occasion, PaginatedWardrobe, Season, WardrobeCategory } from "../types/domain";
 
 export type WardrobeQuery = {
   category?: WardrobeCategory;
@@ -13,6 +13,7 @@ export type WardrobeQuery = {
 export type ClothingItemInput = {
   imageUri?: string;
   imageUrl?: string;
+  imagePublicId?: string;
   category: WardrobeCategory;
   subcategory?: string;
   color?: string;
@@ -20,6 +21,9 @@ export type ClothingItemInput = {
   occasion: Occasion[];
   season: Season[];
   notes?: string;
+  // AI correction tracking — echoed back from the prediction step
+  predictedCategory?: WardrobeCategory | "unknown";
+  confidence?: number;
 };
 
 function appendArray(form: FormData, key: string, values: string[]) {
@@ -47,7 +51,22 @@ function toFormData(input: ClothingItemInput) {
   appendArray(form, "occasion", input.occasion);
   appendArray(form, "season", input.season);
   if (input.notes) form.append("notes", input.notes);
+  // Echo AI hint fields so the backend can detect corrections
+  if (input.predictedCategory) form.append("predictedCategory", input.predictedCategory);
+  if (input.confidence !== undefined) form.append("confidence", String(input.confidence));
 
+  return form;
+}
+
+function imageUriToFormData(imageUri: string): FormData {
+  const form = new FormData();
+  const name = imageUri.split("/").pop() ?? "wardrobe-item.jpg";
+  const ext = name.split(".").pop()?.toLowerCase();
+  form.append("image", {
+    uri: imageUri,
+    name,
+    type: ext === "png" ? "image/png" : "image/jpeg"
+  } as unknown as Blob);
   return form;
 }
 
@@ -78,5 +97,13 @@ export const wardrobeApi = {
 
   async remove(id: string) {
     await apiClient.delete(`/wardrobe/${id}`);
+  },
+
+  /** Upload image → Cloudinary → AI without persisting a ClothingItem. */
+  async predictFromImage(imageUri: string) {
+    const response = await apiClient.post<ApiEnvelope<AiPrediction>>("/wardrobe/predict", imageUriToFormData(imageUri), {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    return response.data.data;
   }
 };

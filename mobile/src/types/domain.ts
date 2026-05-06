@@ -53,6 +53,19 @@ export type ClothingItem = {
   usageCount: number;
   lastWorn?: string;
   createdAt: string;
+  aiMetadata?: {
+    predictedCategory: string;
+    finalCategory: string;
+    confidence: number;
+    userCorrected: boolean;
+  };
+};
+
+export type AiPrediction = {
+  imageUrl: string;
+  imagePublicId: string;
+  predictedCategory: WardrobeCategory | "unknown";
+  confidence: number;
 };
 
 export type Outfit = {

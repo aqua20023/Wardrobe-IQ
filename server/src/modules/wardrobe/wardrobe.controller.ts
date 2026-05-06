@@ -1,5 +1,6 @@
 import type { Response } from "express";
 import { asyncHandler } from "../../common/utils/asyncHandler";
+import { AppError } from "../../common/utils/AppError";
 import type { AuthenticatedRequest } from "../../common/middleware/auth";
 import { wardrobeService } from "./wardrobe.service";
 import type { WardrobeQuery } from "./wardrobe.validators";
@@ -28,5 +29,11 @@ export const wardrobeController = {
   remove: asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     await wardrobeService.remove(req.user!.id, req.params.id);
     res.status(204).send();
+  }),
+
+  predict: asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    if (!req.file) throw new AppError("An image file is required for prediction", 400);
+    const prediction = await wardrobeService.predict(req.user!.id, req.file);
+    res.json({ success: true, data: prediction });
   })
 };

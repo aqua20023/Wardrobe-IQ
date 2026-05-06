@@ -27,7 +27,13 @@ const clothingItemSchema = new Schema(
     season: { type: [String], enum: seasons, default: ["all-season"], index: true },
     notes: { type: String, trim: true },
     usageCount: { type: Number, default: 0 },
-    lastWorn: { type: Date }
+    lastWorn: { type: Date },
+    aiMetadata: {
+      predictedCategory: { type: String },
+      finalCategory: { type: String },
+      confidence: { type: Number },
+      userCorrected: { type: Boolean, default: false }
+    }
   },
   { timestamps: true, versionKey: false }
 );
@@ -35,6 +41,8 @@ const clothingItemSchema = new Schema(
 clothingItemSchema.index({ userId: 1, category: 1, createdAt: -1 });
 clothingItemSchema.index({ userId: 1, tags: 1 });
 clothingItemSchema.index({ subcategory: "text", color: "text", tags: "text", notes: "text" });
+// Supports future retraining queries: fetch all items where the user overrode the AI prediction
+clothingItemSchema.index({ "aiMetadata.userCorrected": 1 });
 
 clothingItemSchema.set("toJSON", {
   transform: (_doc, ret) => {

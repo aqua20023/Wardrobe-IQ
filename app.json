@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "7a311ece-cd5e-4563-9202-1eb54697d284"
+      }
+    },
+    "android": {
+      "package": "com.aquamarine20023.wardrobeiq"
+    }
+  }
+}

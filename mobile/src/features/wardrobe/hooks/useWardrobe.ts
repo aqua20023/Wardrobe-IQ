@@ -46,3 +46,10 @@ export function useDeleteClothingItem() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: wardrobeKeys.all })
   });
 }
+
+/** Uploads an image, calls the AI service, and returns a prediction without saving the item. */
+export function usePredictClothingItem() {
+  return useMutation({
+    mutationFn: (imageUri: string) => wardrobeApi.predictFromImage(imageUri)
+  });
+}

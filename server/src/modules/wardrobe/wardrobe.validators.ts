@@ -15,7 +15,11 @@ export const createClothingItemSchema = z.object({
   tags: z.preprocess(csvToArray, z.array(z.string()).default([])),
   occasion: z.preprocess(csvToArray, z.array(z.enum(occasions)).default(["casual"])),
   season: z.preprocess(csvToArray, z.array(z.enum(seasons)).default(["all-season"])),
-  notes: z.string().max(500).optional()
+  notes: z.string().max(500).optional(),
+  // AI hint fields — sent back by the client when the user reviewed an AI suggestion.
+  // If predictedCategory differs from category the server marks userCorrected = true.
+  predictedCategory: z.enum(wardrobeCategories).optional(),
+  confidence: z.number().min(0).max(1).optional()
 });
 
 export const updateClothingItemSchema = createClothingItemSchema.partial();

@@ -2,6 +2,7 @@ import type { FilterQuery } from "mongoose";
 import { cacheDeleteByPrefix, cacheGet, cacheSet } from "../../config/redis";
 import { AppError } from "../../common/utils/AppError";
 import { uploadBufferToCloudinary } from "../uploads/upload.service";
+import { predictCategory } from "../../services/ai.service";
 import { ClothingItemModel, type ClothingItem } from "./clothingItem.model";
 import { wardrobeRepository } from "./wardrobe.repository";
 import type { createClothingItemSchema, updateClothingItemSchema, wardrobeQuerySchema } from "./wardrobe.validators";
@@ -50,10 +51,47 @@ export const wardrobeService = {
 
     if (!imageUrl) throw new AppError("Either image file or imageUrl is required", 400);
 
-    const item = await wardrobeRepository.create({ ...input, imageUrl, imagePublicId, userId });
+    // ── AI Metadata Resolution ────────────────────────────────────────────────
+    // Strategy A: the client already showed the AI prediction to the user and
+    //   passes predictedCategory + confidence back in the request body.
+    //   We just check whether the user changed the category.
+    //
+    // Strategy B: no client-side hint → call the AI service server-side now.
+    //   This keeps the feature working for API clients that don't surface the
+    //   AI suggestion in the UI.
+    let predictedCategory: string;
+    let confidence: number;
+
+    if (input.predictedCategory !== undefined && input.confidence !== undefined) {
+      // Client supplied the AI hint it showed to the user
+      predictedCategory = input.predictedCategory;
+      confidence = input.confidence;
+    } else {
+      // Fall back to a live server-side prediction
+      const aiPrediction = await predictCategory(imageUrl);
+      predictedCategory = aiPrediction.category;
+      confidence = aiPrediction.confidence;
+    }
+
+    const finalCategory = input.category;
+    const userCorrected = predictedCategory !== "unknown" && predictedCategory !== finalCategory;
+
+    const aiMetadata = { predictedCategory, finalCategory, confidence, userCorrected };
+
+    // Strip AI hint fields before persisting — they live in aiMetadata only
+    const { predictedCategory: _pc, confidence: _conf, ...itemInput } = input;
+
+    const item = await wardrobeRepository.create({
+      ...itemInput,
+      imageUrl,
+      imagePublicId,
+      userId,
+      aiMetadata
+    });
     await cacheDeleteByPrefix(`wardrobe:${userId}`);
     return item;
   },
+
 
   async list(userId: string, query: QueryInput) {
     const cacheKey = `wardrobe:${userId}:${JSON.stringify(query)}`;
@@ -101,5 +139,17 @@ export const wardrobeService = {
 
   async recent(userId: string, limit = 6) {
     return ClothingItemModel.find({ userId }).sort({ createdAt: -1 }).limit(limit);
+  },
+
+  /** Upload image → Cloudinary → AI, return prediction without persisting a ClothingItem. */
+  async predict(userId: string, file: Express.Multer.File) {
+    const upload = await uploadBufferToCloudinary(file, `wardrobe-iq/${userId}/wardrobe/preview`);
+    const prediction = await predictCategory(upload.imageUrl);
+    return {
+      imageUrl: upload.imageUrl,
+      imagePublicId: upload.publicId,
+      predictedCategory: prediction.category,
+      confidence: prediction.confidence
+    };
   }
 };

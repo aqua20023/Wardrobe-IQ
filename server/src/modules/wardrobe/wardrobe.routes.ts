@@ -10,6 +10,7 @@ export const wardrobeRoutes = Router();
 wardrobeRoutes.use(authenticate);
 wardrobeRoutes.get("/", validate({ query: wardrobeQuerySchema }), wardrobeController.list);
 wardrobeRoutes.post("/", imageUpload.single("image"), validate({ body: createClothingItemSchema }), wardrobeController.create);
+wardrobeRoutes.post("/predict", imageUpload.single("image"), wardrobeController.predict);
 wardrobeRoutes.get("/:id", validate({ params: idParamSchema }), wardrobeController.get);
 wardrobeRoutes.patch("/:id", imageUpload.single("image"), validate({ params: idParamSchema, body: updateClothingItemSchema }), wardrobeController.update);
 wardrobeRoutes.delete("/:id", validate({ params: idParamSchema }), wardrobeController.remove);
