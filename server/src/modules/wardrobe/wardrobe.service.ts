@@ -60,23 +60,27 @@ export const wardrobeService = {
     //   This keeps the feature working for API clients that don't surface the
     //   AI suggestion in the UI.
     let predictedCategory: string;
+    let rawLabel: string;
     let confidence: number;
 
     if (input.predictedCategory !== undefined && input.confidence !== undefined) {
-      // Client supplied the AI hint it showed to the user
+      // Client already surfaced the AI suggestion to the user and echoed it back.
+      // predictedCategory here is already a mapped WardrobeCategory from a prior /predict call.
       predictedCategory = input.predictedCategory;
+      rawLabel = input.predictedCategory; // client path has no separate raw label
       confidence = input.confidence;
     } else {
-      // Fall back to a live server-side prediction
+      // No client hint — run a live server-side prediction now.
       const aiPrediction = await predictCategory(imageUrl);
-      predictedCategory = aiPrediction.category;
+      predictedCategory = aiPrediction.category;  // mapped WardrobeCategory
+      rawLabel = aiPrediction.rawLabel;            // original FastAPI label
       confidence = aiPrediction.confidence;
     }
 
     const finalCategory = input.category;
-    const userCorrected = predictedCategory !== "unknown" && predictedCategory !== finalCategory;
+    const userCorrected = predictedCategory !== "other" && predictedCategory !== finalCategory;
 
-    const aiMetadata = { predictedCategory, finalCategory, confidence, userCorrected };
+    const aiMetadata = { predictedCategory, rawLabel, finalCategory, confidence, userCorrected };
 
     // Strip AI hint fields before persisting — they live in aiMetadata only
     const { predictedCategory: _pc, confidence: _conf, ...itemInput } = input;
@@ -141,14 +145,23 @@ export const wardrobeService = {
     return ClothingItemModel.find({ userId }).sort({ createdAt: -1 }).limit(limit);
   },
 
-  /** Upload image → Cloudinary → AI, return prediction without persisting a ClothingItem. */
+  /**
+   * Upload image → Cloudinary → AI service, return prediction without persisting a ClothingItem.
+   *
+   * The client should display the suggestion to the user, let them confirm or correct it,
+   * then submit POST /wardrobe with predictedCategory + confidence echoed back so the
+   * backend can record whether the user corrected the AI.
+   */
   async predict(userId: string, file: Express.Multer.File) {
     const upload = await uploadBufferToCloudinary(file, `wardrobe-iq/${userId}/wardrobe/preview`);
     const prediction = await predictCategory(upload.imageUrl);
     return {
       imageUrl: upload.imageUrl,
       imagePublicId: upload.publicId,
+      /** Mapped wardrobe category — use this value in the create request body. */
       predictedCategory: prediction.category,
+      /** Original FastAPI label before mapping — informational only. */
+      rawLabel: prediction.rawLabel,
       confidence: prediction.confidence
     };
   }

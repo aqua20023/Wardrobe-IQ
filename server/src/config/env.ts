@@ -19,7 +19,8 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().min(1, "CLOUDINARY_API_SECRET is required"),
   CLOUDINARY_FOLDER: z.string().default("wardrobe-iq"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000),
-  RATE_LIMIT_MAX: z.coerce.number().default(120)
+  RATE_LIMIT_MAX: z.coerce.number().default(120),
+  AI_SERVICE_URL: z.string().url().default("http://localhost:8001")
 });
 
 const parsed = envSchema.safeParse(process.env);

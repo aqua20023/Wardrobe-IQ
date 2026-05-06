@@ -1,31 +1,49 @@
 import axios from "axios";
+import { env } from "../config/env";
+import { mapAiLabelToCategory, type WardrobeCategory } from "./ai.label-mapper";
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
+/** Shape of the FastAPI POST /predict/category response. */
+interface FastApiPrediction {
+  category: string; // raw AI label e.g. "shirt", "jeans"
+  confidence: number; // softmax probability 0–1
+}
 
+/** Normalised prediction consumed by the rest of the backend. */
 export interface AiPrediction {
-  category: string;
+  /** Mapped wardrobe-schema category (e.g. "tops", "bottoms"). */
+  category: WardrobeCategory;
+  /** Raw label the model returned before mapping (e.g. "shirt"). */
+  rawLabel: string;
+  /** Softmax confidence score 0–1. */
   confidence: number;
 }
 
+const PREDICT_ENDPOINT = `${env.AI_SERVICE_URL}/predict/category`;
+const REQUEST_TIMEOUT_MS = 10_000; // don't block uploads on a slow AI service
+
 /**
  * Calls the FastAPI AI service to predict the clothing category for a given image URL.
- * Returns a fallback prediction with confidence 0 if the service is unavailable.
+ *
+ * - Maps the raw AI label to the wardrobe schema category via `mapAiLabelToCategory`.
+ * - Returns a safe fallback prediction (category: "other", confidence: 0) if the
+ *   service is unreachable or returns an error — the upload flow must not be blocked.
+ *
+ * @param imageUrl - Publicly accessible Cloudinary URL of the uploaded image.
  */
 export async function predictCategory(imageUrl: string): Promise<AiPrediction> {
-  if (!AI_SERVICE_URL) {
-    console.warn("[AI Service] AI_SERVICE_URL is not configured — skipping prediction.");
-    return { category: "unknown", confidence: 0 };
-  }
-
   try {
-    const response = await axios.post<AiPrediction>(
-      `${AI_SERVICE_URL}/predict/category`,
+    const response = await axios.post<FastApiPrediction>(
+      PREDICT_ENDPOINT,
       { image_url: imageUrl },
-      { timeout: 10_000 } // 10 s — don't block uploads on a slow AI service
+      { timeout: REQUEST_TIMEOUT_MS }
     );
-    return response.data;
+
+    const { category: rawLabel, confidence } = response.data;
+    const category = mapAiLabelToCategory(rawLabel);
+
+    return { category, rawLabel, confidence };
   } catch (error) {
     console.error("[AI Service] predictCategory failed:", (error as Error).message);
-    return { category: "unknown", confidence: 0 };
+    return { category: "other", rawLabel: "unknown", confidence: 0 };
   }
 }

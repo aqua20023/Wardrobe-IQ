@@ -30,6 +30,7 @@ const clothingItemSchema = new Schema(
     lastWorn: { type: Date },
     aiMetadata: {
       predictedCategory: { type: String },
+      rawLabel: { type: String },        // raw FastAPI label e.g. "shirt", "t-shirt"
       finalCategory: { type: String },
       confidence: { type: Number },
       userCorrected: { type: Boolean, default: false }
