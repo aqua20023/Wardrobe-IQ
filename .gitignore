@@ -1,15 +1,78 @@
-node_modules
-.expo
-.expo-shared
-dist
-build
-coverage
-.env
-.env.*
-!.env.example
+# -----------------------------
+# Dependencies
+# -----------------------------
+node_modules/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.venv/
+venv/
+env/
+
+# -----------------------------
+# Expo / React Native
+# -----------------------------
+.expo/
+.expo-shared/
+dist/
+build/
+*.apk
+*.aab
+
+# -----------------------------
+# Logs
+# -----------------------------
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# -----------------------------
+# Environment
+# -----------------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------------
+# Coverage / Testing
+# -----------------------------
+coverage/
+.pytest_cache/
+.mypy_cache/
+
+# -----------------------------
+# OS / Editor
+# -----------------------------
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
 *.local
-uploads
+
+# -----------------------------
+# Uploads / Temp
+# -----------------------------
+uploads/
+tmp/
+temp/
+
+# -----------------------------
+# ML / Data
+# -----------------------------
+ai-service/data/dataset_a_raw/
+ai-service/data/dataset_a_processed/
+ai-service/models/category_classifier.pth
+ai-service/models/*.pt
+ai-service/models/*.pth
+ai-service/__pycache__/
+ai-service/.pytest_cache/
+
+# -----------------------------
+# Build Artifacts
+# -----------------------------
+*.tsbuildinfo
+*.cache

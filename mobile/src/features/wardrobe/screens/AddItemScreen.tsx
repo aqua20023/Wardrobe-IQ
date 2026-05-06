@@ -182,7 +182,7 @@ export function AddItemScreen({ navigation }: Props) {
             <Text className={`flex-1 text-sm font-medium ${isAiCorrected ? "text-brass" : "text-mist"}`}>
               {isAiCorrected
                 ? `AI suggested "${categoryLabels[predictedCategory as WardrobeCategory]}" · You changed it`
-                : `AI predicted: ${categoryLabels[predictedCategory as WardrobeCategory]} (${Math.round((confidence ?? 0) * 100)}% confidence)`}
+                : `Predicted: ${categoryLabels[predictedCategory as WardrobeCategory]} (${Math.round((confidence ?? 0) * 100)}%)`}
             </Text>
             {isAiCorrected && (
               <Pressable
