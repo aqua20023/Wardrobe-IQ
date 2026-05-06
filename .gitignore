@@ -56,9 +56,10 @@ Thumbs.db
 # -----------------------------
 # Uploads / Temp
 # -----------------------------
-uploads/
-tmp/
-temp/
+/uploads/
+/server/uploads/
+/tmp/
+/temp/
 
 # -----------------------------
 # ML / Data
