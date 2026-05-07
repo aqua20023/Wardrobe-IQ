@@ -8,6 +8,7 @@ Returns the predicted class label and its softmax confidence score.
 from __future__ import annotations
 
 import logging
+import time
 
 import torch
 import torch.nn as nn
@@ -35,10 +36,20 @@ def predict(model: nn.Module, tensor: torch.Tensor) -> tuple[str, float]:
         RuntimeError: if the model forward pass fails.
         IndexError:   if the predicted index is out of range.
     """
+    logger.info("[AI Category] inference start")
+    t0 = time.perf_counter()
     with torch.no_grad():
         logits: torch.Tensor = model(tensor)          # (1, num_classes)
+        t1 = time.perf_counter()
+        logger.info("[AI Category] forward pass complete (%.0fms)", (t1 - t0) * 1000)
+        
+        logger.info("[AI Category] softmax start")
         probabilities = F.softmax(logits, dim=1)      # (1, num_classes)
+        t2 = time.perf_counter()
+        logger.info("[AI Category] softmax complete (%.0fms)", (t2 - t1) * 1000)
+        
         confidence_tensor, class_idx_tensor = probabilities.max(dim=1)
+    logger.info("[AI Category] inference complete (%.0fms)", (t2 - t0) * 1000)
 
     class_idx: int = class_idx_tensor.item()
     confidence: float = round(float(confidence_tensor.item()), 4)

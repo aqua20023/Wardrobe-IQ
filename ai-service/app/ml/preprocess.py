@@ -11,6 +11,7 @@ Output: FloatTensor of shape (1, 3, 224, 224), ready for model inference.
 from __future__ import annotations
 
 import logging
+import time
 
 import torch
 from torchvision import transforms
@@ -47,5 +48,11 @@ def preprocess_from_url(image_url: str) -> torch.Tensor:
         ValueError: if the downloaded content exceeds the size limit.
     """
     image = download_image(image_url)
+    
+    logger.info("[AI Category] preprocess start")
+    t0 = time.perf_counter()
     tensor: torch.Tensor = _transform(image)
+    t1 = time.perf_counter()
+    logger.info("[AI Category] preprocess complete (%.0fms)", (t1 - t0) * 1000)
+    
     return tensor.unsqueeze(0)  # add batch dimension → (1, 3, 224, 224)

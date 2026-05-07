@@ -16,11 +16,16 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+import time
 from typing import AsyncGenerator
 
+import torch
 import torch.nn as nn
 from fastapi import FastAPI
 from pydantic import BaseModel, HttpUrl
+
+# Limit threads to prevent catastrophic thrashing on Render's 0.1 CPU limits
+torch.set_num_threads(1)
 
 from app.color import extract_dominant_colors
 from app.common.image import download_image
@@ -123,6 +128,9 @@ def predict_category(payload: ImageRequest) -> CategoryResponse:
     On any failure (download error, invalid image, model error) returns:
         { "category": "unknown", "confidence": 0.0 }
     """
+    t_start = time.perf_counter()
+    logger.info("[AI Category] request received")
+    
     if state.model is None:
         logger.warning("predict_category called but model is not loaded.")
         return _FALLBACK_CATEGORY
@@ -142,6 +150,8 @@ def predict_category(payload: ImageRequest) -> CategoryResponse:
         logger.error("Model inference failed: %s", exc)
         return _FALLBACK_CATEGORY
 
+    t_end = time.perf_counter()
+    logger.info("[AI Category] response return (%.0fms total)", (t_end - t_start) * 1000)
     return CategoryResponse(category=label, confidence=confidence)
 
 
