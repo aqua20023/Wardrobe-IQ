@@ -65,6 +65,7 @@ export type AiPrediction = {
   imageUrl: string;
   imagePublicId: string;
   predictedCategory: WardrobeCategory | "unknown";
+  rawLabel?: string;
   confidence: number;
   primaryColor?: string;
   secondaryColors?: string[];

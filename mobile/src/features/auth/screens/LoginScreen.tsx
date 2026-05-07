@@ -59,7 +59,8 @@ export function LoginScreen({ navigation }: Props) {
           )}
         />
         {errors.root?.message ? <Text className="text-sm text-oxblood">{errors.root.message}</Text> : null}
-        <Button label="Log In" loading={isSubmitting} onPress={onSubmit} />
+        <Button label={isSubmitting ? "Connecting to server..." : "Log In"} loading={isSubmitting} onPress={onSubmit} />
+        {isSubmitting && <Text className="mt-1 text-center text-xs text-stone">First request may take a few seconds</Text>}
       </View>
 
       <View className="mt-6 flex-row justify-between">

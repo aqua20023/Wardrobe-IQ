@@ -20,7 +20,7 @@ const envSchema = z.object({
   CLOUDINARY_FOLDER: z.string().default("wardrobe-iq"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().default(120),
-  AI_SERVICE_URL: z.string().url().default("http://localhost:8001")
+  AI_SERVICE_URL: z.string().url().default("https://wardrobe-iq-ai.onrender.com")
 });
 
 const parsed = envSchema.safeParse(process.env);

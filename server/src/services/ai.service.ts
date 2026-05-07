@@ -25,7 +25,8 @@ export interface AiColorPrediction {
 
 const PREDICT_CATEGORY_ENDPOINT = `${env.AI_SERVICE_URL}/predict/category`;
 const PREDICT_COLOR_ENDPOINT = `${env.AI_SERVICE_URL}/predict/color`;
-const REQUEST_TIMEOUT_MS = 10_000; // don't block uploads on a slow AI service
+const CATEGORY_TIMEOUT_MS = 60_000; // Allow category up to 60s to survive heavy Render PyTorch cold starts
+const COLOR_TIMEOUT_MS = 3_000; // Color is best-effort, strict timeout
 
 /**
  * Calls the FastAPI AI service to predict the clothing category for a given image URL.
@@ -37,19 +38,38 @@ const REQUEST_TIMEOUT_MS = 10_000; // don't block uploads on a slow AI service
  * @param imageUrl - Publicly accessible Cloudinary URL of the uploaded image.
  */
 export async function predictCategory(imageUrl: string): Promise<AiPrediction> {
+  const requestPayload = { image_url: imageUrl };
+  console.log("[AI Service] Category prediction request start:", JSON.stringify({
+    endpoint: PREDICT_CATEGORY_ENDPOINT,
+    payload: requestPayload,
+  }, null, 2));
+
   try {
     const response = await axios.post<FastApiPrediction>(
       PREDICT_CATEGORY_ENDPOINT,
-      { image_url: imageUrl },
-      { timeout: REQUEST_TIMEOUT_MS }
+      requestPayload,
+      { timeout: CATEGORY_TIMEOUT_MS }
     );
+    
+    console.log("[AI Service] Category prediction success:", JSON.stringify({
+      status: response.status,
+      body: response.data
+    }, null, 2));
 
     const { category: rawLabel, confidence } = response.data;
     const category = mapAiLabelToCategory(rawLabel);
 
     return { category, rawLabel, confidence };
   } catch (error) {
-    console.error("[AI Service] predictCategory failed:", (error as Error).message);
+    const failureDetails = {
+      message: (error as Error).message,
+      code: axios.isAxiosError(error) ? error.code : "UNKNOWN",
+      status: axios.isAxiosError(error) ? error.response?.status : undefined,
+      responseData: axios.isAxiosError(error) ? error.response?.data : undefined,
+      stack: (error as Error).stack,
+      predictor: "category"
+    };
+    console.error("[AI Service] Category prediction EXACT FAILURE:", JSON.stringify(failureDetails, null, 2));
     return { category: "other", rawLabel: "unknown", confidence: 0 };
   }
 }
@@ -63,17 +83,36 @@ export async function predictCategory(imageUrl: string): Promise<AiPrediction> {
  * @param imageUrl - Publicly accessible Cloudinary URL of the uploaded image.
  */
 export async function predictColor(imageUrl: string): Promise<AiColorPrediction> {
+  const requestPayload = { image_url: imageUrl };
+  console.log("[AI Service] Color prediction request start:", JSON.stringify({
+    endpoint: PREDICT_COLOR_ENDPOINT,
+    payload: requestPayload,
+  }, null, 2));
+
   try {
     const response = await axios.post<{ primary_color: string; secondary_colors: string[] }>(
       PREDICT_COLOR_ENDPOINT,
-      { image_url: imageUrl },
-      { timeout: REQUEST_TIMEOUT_MS }
+      requestPayload,
+      { timeout: COLOR_TIMEOUT_MS }
     );
 
+    console.log("[AI Service] Color prediction success:", JSON.stringify({
+      status: response.status,
+      body: response.data
+    }, null, 2));
+    
     const { primary_color, secondary_colors } = response.data;
     return { primaryColor: primary_color, secondaryColors: secondary_colors };
   } catch (error) {
-    console.error("[AI Service] predictColor failed:", (error as Error).message);
+    const failureDetails = {
+      message: (error as Error).message,
+      code: axios.isAxiosError(error) ? error.code : "UNKNOWN",
+      status: axios.isAxiosError(error) ? error.response?.status : undefined,
+      responseData: axios.isAxiosError(error) ? error.response?.data : undefined,
+      stack: (error as Error).stack,
+      predictor: "color"
+    };
+    console.error("[AI Service] Color prediction EXACT FAILURE:", JSON.stringify(failureDetails, null, 2));
     return { primaryColor: "unknown", secondaryColors: [] };
   }
 }

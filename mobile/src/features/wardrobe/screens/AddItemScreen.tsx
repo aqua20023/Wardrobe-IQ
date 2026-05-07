@@ -46,6 +46,7 @@ export function AddItemScreen({ navigation }: Props) {
     watch,
     setValue,
     setError,
+    clearErrors,
     formState: { errors, isSubmitting }
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -89,6 +90,7 @@ export function AddItemScreen({ navigation }: Props) {
     setValue("imageUri", uri, { shouldValidate: true });
 
     // Clear any previous prediction state
+    clearErrors("root");
     setValue("imageUrl", undefined);
     setValue("imagePublicId", undefined);
     setValue("predictedCategory", undefined);
@@ -96,18 +98,34 @@ export function AddItemScreen({ navigation }: Props) {
 
     // Fire prediction — uploads to Cloudinary + AI in one step
     try {
+      console.log("[Mobile] Predict mutation start for URI:", uri);
       const prediction = await predictItem.mutateAsync(uri);
+      console.log("[Mobile] Raw API response parsed prediction object:", prediction);
       setValue("imageUrl", prediction.imageUrl);
       setValue("imagePublicId", prediction.imagePublicId);
       setValue("confidence", prediction.confidence);
 
-      if (prediction.predictedCategory !== "unknown") {
+      const isFallback = prediction.rawLabel === "unknown" || prediction.confidence === 0;
+      
+      if (isFallback) {
+        console.log("[Mobile] Prediction returned fallback values. Skipping autofill.");
+        setError("root", { message: "Couldn't analyze image. Please fill details manually." });
+      } else {
+        console.log("[Mobile] Calling setValue for category & predictedCategory");
         setValue("predictedCategory", prediction.predictedCategory);
         setValue("category", prediction.predictedCategory as WardrobeCategory);
+        
+        if (prediction.rawLabel && prediction.rawLabel !== "unknown") {
+          console.log("[Mobile] Calling setValue for subcategory");
+          setValue("subcategory", prediction.rawLabel.toLowerCase());
+        }
       }
 
       if (prediction.primaryColor && prediction.primaryColor !== "unknown") {
+        console.log("[Mobile] Setting primary color:", prediction.primaryColor);
         setValue("color", prediction.primaryColor);
+      } else {
+        console.log("[Mobile] Bypassed color state updates — color is unknown or missing");
       }
 
       if (prediction.secondaryColors && prediction.secondaryColors.length > 0) {
@@ -115,8 +133,10 @@ export function AddItemScreen({ navigation }: Props) {
       } else {
         setSecondaryColors([]);
       }
-    } catch {
-      // Non-fatal — user can still fill the form manually
+      console.log("[Mobile] Prediction state updates complete. Loading spinner will now end.");
+    } catch (err) {
+      console.error("[AddItem] Prediction failed:", err);
+      setError("root", { message: "Analysis failed. Please fill the details manually." });
     }
   }
 

@@ -60,7 +60,8 @@ export function SignupScreen({ navigation }: Props) {
           )}
         />
         {errors.root?.message ? <Text className="text-sm text-oxblood">{errors.root.message}</Text> : null}
-        <Button label="Sign Up" loading={isSubmitting} onPress={onSubmit} />
+        <Button label={isSubmitting ? "Connecting to server..." : "Sign Up"} loading={isSubmitting} onPress={onSubmit} />
+        {isSubmitting && <Text className="mt-1 text-center text-xs text-stone">First request may take a few seconds</Text>}
       </View>
 
       <Pressable className="mt-6" onPress={() => navigation.navigate("Login")}>

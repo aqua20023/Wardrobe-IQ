@@ -164,12 +164,17 @@ export const wardrobeService = {
    * backend can record whether the user corrected the AI.
    */
   async predict(userId: string, file: Express.Multer.File) {
+    console.log("[Backend] /wardrobe/predict started");
+    console.log("[Backend] Uploading image to Cloudinary...");
     const upload = await uploadBufferToCloudinary(file, `wardrobe-iq/${userId}/wardrobe/preview`);
+    console.log("[Backend] Image uploaded. URL:", upload.imageUrl);
+    console.log("[Backend] Calling category and color predictors in parallel...");
     const [prediction, colorPrediction] = await Promise.all([
       predictCategory(upload.imageUrl),
       predictColor(upload.imageUrl)
     ]);
-    return {
+    console.log("[Backend] Predictors finished.");
+    const finalPayload = {
       imageUrl: upload.imageUrl,
       imagePublicId: upload.publicId,
       /** Mapped wardrobe category — use this value in the create request body. */
@@ -180,5 +185,7 @@ export const wardrobeService = {
       primaryColor: colorPrediction.primaryColor,
       secondaryColors: colorPrediction.secondaryColors
     };
+    console.log("[Backend] Exact JSON returned to mobile:", JSON.stringify(finalPayload, null, 2));
+    return finalPayload;
   }
 };

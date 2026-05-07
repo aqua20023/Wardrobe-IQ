@@ -47,16 +47,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   async login(input) {
-    const { user, tokens } = await authApi.login(input);
-    await tokenStorage.setTokens(tokens);
-    set({ user, status: "authenticated" });
+    try {
+      const { user, tokens } = await authApi.login(input);
+      await tokenStorage.setTokens(tokens);
+      set({ user, status: "authenticated" });
+    } catch (err: any) {
+      if (err?.code === "ECONNABORTED" || err?.message?.includes("Network Error") || err?.code === "ERR_NETWORK") {
+        console.warn("[Auth] Cold start retry for login...");
+        const { user, tokens } = await authApi.login(input);
+        await tokenStorage.setTokens(tokens);
+        set({ user, status: "authenticated" });
+        return;
+      }
+      throw err;
+    }
   },
 
   async signup(input) {
-    const { user, tokens } = await authApi.register(input);
-    await tokenStorage.setTokens(tokens);
-    await get().completeOnboarding();
-    set({ user, status: "authenticated" });
+    try {
+      const { user, tokens } = await authApi.register(input);
+      await tokenStorage.setTokens(tokens);
+      await get().completeOnboarding();
+      set({ user, status: "authenticated" });
+    } catch (err: any) {
+      if (err?.code === "ECONNABORTED" || err?.message?.includes("Network Error") || err?.code === "ERR_NETWORK") {
+        console.warn("[Auth] Cold start retry for signup...");
+        const { user, tokens } = await authApi.register(input);
+        await tokenStorage.setTokens(tokens);
+        await get().completeOnboarding();
+        set({ user, status: "authenticated" });
+        return;
+      }
+      throw err;
+    }
   },
 
   async logout() {
