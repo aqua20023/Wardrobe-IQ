@@ -25,8 +25,10 @@ async function bootstrap() {
 
   scheduleDailyOutfitJob();
 
-  httpServer.listen(env.PORT, () => {
-    console.log(`[api] Wardrobe IQ listening on http://localhost:${env.PORT}${env.API_PREFIX}`);
+  const PORT = process.env.PORT || 4000;
+
+  httpServer.listen(PORT, () => {
+    console.log(`[api] Wardrobe IQ listening on port ${PORT}`);
   });
 }
 
