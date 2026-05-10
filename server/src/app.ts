@@ -27,6 +27,17 @@ export function createApp() {
   app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
   app.use(apiRateLimiter);
 
+  app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "healthy" });
+  });
+
+  app.get("/", (_req, res) => {
+    res.status(200).json({
+      status: "ok",
+      service: "Wardrobe IQ API"
+    });
+  });
+
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
   app.get("/api-docs.json", (_req, res) => res.json(openApiSpec));
   app.use(env.API_PREFIX, v1Routes);
