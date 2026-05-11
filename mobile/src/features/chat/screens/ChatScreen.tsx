@@ -1,10 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
-import { FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { chatApi } from "../../../api/chat";
 import { getApiErrorMessage } from "../../../api/client";
 import { Chip } from "../../../components/ui/Chip";
+import { AppHeader } from "../../../components/ui/EditorialPrimitives";
+import { EditorialText } from "../../../components/ui/EditorialText";
 import { Screen } from "../../../components/ui/Screen";
+import type { RootStackParamList } from "../../../navigation/types";
+import { colors, fonts, radii, shadows, spacing } from "../../../theme/editorial";
 
 type Message = {
   id: string;
@@ -12,14 +18,20 @@ type Message = {
   content: string;
 };
 
-const prompts = ["Suggest a casual outfit", "What should I wear today?", "Suggest formal look"];
+const prompts = [
+  "Explain why my cold-weather look works",
+  "Improve my black blazer outfit",
+  "Suggest a silver accessory",
+  "What colors balance espresso tones?"
+];
 
 export function ChatScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
       role: "assistant",
-      content: "Ask for outfit ideas here. NLP is not enabled yet, but the API contract is ready."
+      content: "Welcome. Ask me to refine an outfit, explain color harmony, or identify the missing piece in a silhouette."
     }
   ]);
   const [input, setInput] = useState("");
@@ -45,44 +57,133 @@ export function ChatScreen() {
   }
 
   return (
-    <Screen scroll={false}>
-      <View className="flex-1 pt-3">
-        <Text className="text-3xl font-semibold text-mist">Style chat</Text>
-        <Text className="mt-2 text-base leading-6 text-stone">Prompt surface for future NLP recommendations.</Text>
+    <View style={styles.root}>
+      <AppHeader onMenuPress={() => navigation.navigate("Settings")} onProfilePress={() => navigation.navigate("Profile")} />
+      <Screen scroll={false} edges={["bottom", "left", "right"]}>
+        <View style={styles.hero}>
+          <EditorialText variant="label" tone="gold" uppercase>
+            AI Stylist Assistant
+          </EditorialText>
+          <EditorialText variant="headline" style={styles.title}>
+            Your fashion concierge.
+          </EditorialText>
+          <EditorialText variant="bodySmall" tone="ivoryMuted" style={styles.subtitle}>
+            Ask for proportion, color, layering, and styling intelligence through the existing chat endpoint.
+          </EditorialText>
+        </View>
 
-        <View className="mt-4 flex-row flex-wrap">
+        <View style={styles.prompts}>
           {prompts.map((prompt) => (
             <Chip key={prompt} label={prompt} onPress={() => send(prompt)} />
           ))}
         </View>
 
         <FlatList
-          className="mt-5 flex-1"
+          style={styles.messages}
           data={messages}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.messageContent}
           renderItem={({ item }) => (
-            <View className={`mb-3 max-w-[86%] rounded-lg px-4 py-3 ${item.role === "user" ? "self-end bg-mist" : "self-start bg-charcoal"}`}>
-              <Text className={`text-base leading-6 ${item.role === "user" ? "text-ink" : "text-mist"}`}>{item.content}</Text>
+            <View style={[styles.bubble, item.role === "user" ? styles.userBubble : styles.assistantBubble]}>
+              <EditorialText variant="bodySmall" tone={item.role === "user" ? "black" : "ivory"}>
+                {item.content}
+              </EditorialText>
             </View>
           )}
         />
 
-        <View className="mb-3 flex-row items-center gap-3 rounded-full border border-graphite bg-charcoal px-4 py-2">
+        <View style={styles.inputBar}>
+          <Ionicons name="sparkles-outline" color={colors.gold} size={20} />
           <TextInput
             value={input}
             onChangeText={setInput}
             placeholder="Ask what to wear..."
-            placeholderTextColor="#8f8a82"
-            className="min-h-[44px] flex-1 text-base text-mist"
+            placeholderTextColor={colors.dim}
+            style={styles.input}
             returnKeyType="send"
             onSubmitEditing={() => send()}
           />
-          <Pressable onPress={() => send()} className="h-10 w-10 items-center justify-center rounded-full bg-mist" disabled={sending}>
-            <Ionicons name="send" color="#0b0b0c" size={18} />
+          <Pressable onPress={() => send()} style={styles.sendButton} disabled={sending}>
+            <Ionicons name="send" color={colors.black} size={18} />
           </Pressable>
         </View>
-      </View>
-    </Screen>
+      </Screen>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.black
+  },
+  hero: {
+    paddingTop: spacing.md
+  },
+  title: {
+    marginTop: spacing.sm
+  },
+  subtitle: {
+    marginTop: spacing.sm
+  },
+  prompts: {
+    marginTop: spacing.xl,
+    flexDirection: "row",
+    flexWrap: "wrap"
+  },
+  messages: {
+    flex: 1,
+    marginTop: spacing.xl
+  },
+  messageContent: {
+    paddingBottom: spacing.xl
+  },
+  bubble: {
+    maxWidth: "88%",
+    marginBottom: spacing.md,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderWidth: 1
+  },
+  userBubble: {
+    alignSelf: "flex-end",
+    backgroundColor: colors.ivory,
+    borderColor: colors.ivory
+  },
+  assistantBubble: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.charcoal,
+    borderColor: colors.border
+  },
+  inputBar: {
+    marginBottom: spacing.md,
+    minHeight: 60,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.borderWarm,
+    backgroundColor: colors.glass,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+    ...shadows.soft
+  },
+  input: {
+    flex: 1,
+    minHeight: 48,
+    color: colors.ivory,
+    fontFamily: fonts.sans,
+    fontSize: 16
+  },
+  sendButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.gold
+  }
+});
+

@@ -1,13 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Controller, useForm } from "react-hook-form";
-import { Pressable, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { z } from "zod";
 import { getApiErrorMessage } from "../../../api/client";
 import { Button } from "../../../components/ui/Button";
+import { EditorialCard } from "../../../components/ui/EditorialPrimitives";
+import { EditorialText } from "../../../components/ui/EditorialText";
 import { Input } from "../../../components/ui/Input";
+import { PressableScale } from "../../../components/ui/PressableScale";
 import { Screen } from "../../../components/ui/Screen";
 import { useAuthStore } from "../../../stores/authStore";
+import { colors, spacing } from "../../../theme/editorial";
 import type { AuthStackParamList } from "../../../navigation/types";
 
 const schema = z.object({
@@ -37,13 +41,19 @@ export function LoginScreen({ navigation }: Props) {
 
   return (
     <Screen>
-      <View className="pt-10">
-        <Text className="text-sm uppercase text-brass">Wardrobe IQ</Text>
-        <Text className="mt-4 text-4xl font-semibold text-mist">Welcome back</Text>
-        <Text className="mt-3 text-base leading-6 text-stone">Sign in to continue building your wardrobe system.</Text>
+      <View style={styles.hero}>
+        <EditorialText variant="brand" style={styles.brand}>
+          WARDROBE IQ
+        </EditorialText>
+        <EditorialText variant="headline" style={styles.title}>
+          Welcome back to the archive.
+        </EditorialText>
+        <EditorialText variant="body" tone="ivoryMuted" style={styles.body}>
+          Sign in to continue curating your wardrobe intelligence.
+        </EditorialText>
       </View>
 
-      <View className="mt-10 gap-4">
+      <EditorialCard style={styles.form} elevated>
         <Controller
           control={control}
           name="email"
@@ -58,19 +68,62 @@ export function LoginScreen({ navigation }: Props) {
             <Input label="Password" secureTextEntry value={value} onChangeText={onChange} error={errors.password?.message} />
           )}
         />
-        {errors.root?.message ? <Text className="text-sm text-oxblood">{errors.root.message}</Text> : null}
+        {errors.root?.message ? (
+          <EditorialText variant="caption" tone="oxblood">
+            {errors.root.message}
+          </EditorialText>
+        ) : null}
         <Button label={isSubmitting ? "Connecting to server..." : "Log In"} loading={isSubmitting} onPress={onSubmit} />
-        {isSubmitting && <Text className="mt-1 text-center text-xs text-stone">First request may take a few seconds</Text>}
-      </View>
+        {isSubmitting ? (
+          <EditorialText variant="caption" tone="dim" style={styles.center}>
+            First request may take a few seconds
+          </EditorialText>
+        ) : null}
+      </EditorialCard>
 
-      <View className="mt-6 flex-row justify-between">
-        <Pressable onPress={() => navigation.navigate("ForgotPassword")}>
-          <Text className="font-semibold text-stone">Forgot password?</Text>
-        </Pressable>
-        <Pressable onPress={() => navigation.navigate("Signup")}>
-          <Text className="font-semibold text-mist">Create account</Text>
-        </Pressable>
+      <View style={styles.links}>
+        <PressableScale onPress={() => navigation.navigate("ForgotPassword")}>
+          <EditorialText variant="caption" tone="silver" uppercase>
+            Forgot password?
+          </EditorialText>
+        </PressableScale>
+        <PressableScale onPress={() => navigation.navigate("Signup")}>
+          <EditorialText variant="caption" tone="gold" uppercase>
+            Create account
+          </EditorialText>
+        </PressableScale>
       </View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  hero: {
+    paddingTop: spacing.xxl
+  },
+  brand: {
+    textAlign: "center"
+  },
+  title: {
+    marginTop: 42
+  },
+  body: {
+    marginTop: spacing.md
+  },
+  form: {
+    marginTop: 42,
+    padding: spacing.xl,
+    gap: spacing.lg
+  },
+  center: {
+    textAlign: "center"
+  },
+  links: {
+    marginTop: spacing.xl,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.xl
+  }
+});

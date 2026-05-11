@@ -3,6 +3,7 @@ import { NavigationContainer, DarkTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useEffect } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import { SplashScreen } from "../features/onboarding/screens/SplashScreen";
 import { OnboardingScreen } from "../features/onboarding/screens/OnboardingScreen";
 import { LoginScreen } from "../features/auth/screens/LoginScreen";
@@ -14,10 +15,15 @@ import { AddItemScreen } from "../features/wardrobe/screens/AddItemScreen";
 import { ClothingDetailScreen } from "../features/wardrobe/screens/ClothingDetailScreen";
 import { OutfitBuilderScreen } from "../features/outfits/screens/OutfitBuilderScreen";
 import { OutfitSuggestionsScreen } from "../features/outfits/screens/OutfitSuggestionsScreen";
-import { FavoritesScreen } from "../features/outfits/screens/FavoritesScreen";
+import { OutfitDetailScreen } from "../features/outfits/screens/OutfitDetailScreen";
 import { ChatScreen } from "../features/chat/screens/ChatScreen";
 import { ProfileScreen } from "../features/profile/screens/ProfileScreen";
+import { AnalyticsScreen } from "../features/analytics/screens/AnalyticsScreen";
+import { AiSearchScreen } from "../features/search/screens/AiSearchScreen";
+import { PremiumRecommendationsScreen } from "../features/recommendations/screens/PremiumRecommendationsScreen";
+import { SettingsScreen } from "../features/settings/screens/SettingsScreen";
 import { useAuthStore } from "../stores/authStore";
+import { colors, fonts, navThemeColors } from "../theme/editorial";
 import type { AuthStackParamList, MainTabParamList, RootStackParamList } from "./types";
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -28,11 +34,7 @@ const navTheme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    background: "#0b0b0c",
-    card: "#0b0b0c",
-    text: "#f4f4f1",
-    border: "#2a2a2d",
-    primary: "#f4f4f1"
+    ...navThemeColors
   }
 };
 
@@ -53,29 +55,35 @@ function MainTabs() {
     <Tabs.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { backgroundColor: "#0b0b0c", borderTopColor: "#2a2a2d", height: 74, paddingTop: 8 },
-        tabBarActiveTintColor: "#f4f4f1",
-        tabBarInactiveTintColor: "#8f8a82",
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
-        tabBarIcon: ({ color, size }) => {
+        tabBarStyle: styles.tabBar,
+        tabBarActiveTintColor: colors.gold,
+        tabBarInactiveTintColor: colors.silverSoft,
+        tabBarLabel: ({ color, focused }) => (
+          <Text style={[styles.tabLabel, { color }, focused ? styles.tabLabelActive : null]}>
+            {route.name === "AIScan" ? "AI SCAN" : route.name.toUpperCase()}
+          </Text>
+        ),
+        tabBarIcon: ({ color, focused }) => {
           const icons: Record<keyof MainTabParamList, keyof typeof Ionicons.glyphMap> = {
             Home: "home-outline",
-            Wardrobe: "shirt-outline",
-            Suggestions: "sparkles-outline",
-            Chat: "chatbubble-ellipses-outline",
-            Favorites: "heart-outline",
-            Profile: "person-outline"
+            Wardrobe: "file-tray-full-outline",
+            AIScan: "scan-outline",
+            Outfits: "accessibility-outline",
+            Assistant: "chatbubbles-outline"
           };
-          return <Ionicons name={icons[route.name]} color={color} size={size} />;
+          return (
+            <View style={[styles.tabIconWrap, focused ? styles.tabIconActive : null]}>
+              <Ionicons name={icons[route.name]} color={color} size={23} />
+            </View>
+          );
         }
       })}
     >
       <Tabs.Screen name="Home" component={HomeScreen} />
       <Tabs.Screen name="Wardrobe" component={WardrobeScreen} />
-      <Tabs.Screen name="Suggestions" component={OutfitSuggestionsScreen} />
-      <Tabs.Screen name="Chat" component={ChatScreen} />
-      <Tabs.Screen name="Favorites" component={FavoritesScreen} />
-      <Tabs.Screen name="Profile" component={ProfileScreen} />
+      <Tabs.Screen name="AIScan" component={AddItemScreen} />
+      <Tabs.Screen name="Outfits" component={OutfitSuggestionsScreen} />
+      <Tabs.Screen name="Assistant" component={ChatScreen} />
     </Tabs.Navigator>
   );
 }
@@ -85,16 +93,23 @@ function AppNavigator() {
     <NavigationContainer theme={navTheme}>
       <RootStack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: "#0b0b0c" },
-          headerTintColor: "#f4f4f1",
+          headerStyle: { backgroundColor: colors.black },
+          headerTintColor: colors.ivory,
           headerShadowVisible: false,
-          contentStyle: { backgroundColor: "#0b0b0c" }
+          headerTitleStyle: { fontFamily: fonts.serif, fontSize: 21 },
+          contentStyle: { backgroundColor: colors.black }
         }}
       >
         <RootStack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-        <RootStack.Screen name="AddItem" component={AddItemScreen} options={{ title: "Add Item" }} />
-        <RootStack.Screen name="ClothingDetail" component={ClothingDetailScreen} options={{ title: "Item Details" }} />
-        <RootStack.Screen name="OutfitBuilder" component={OutfitBuilderScreen} options={{ title: "Outfit Builder" }} />
+        <RootStack.Screen name="AddItem" component={AddItemScreen} options={{ title: "AI Scan" }} />
+        <RootStack.Screen name="ClothingDetail" component={ClothingDetailScreen} options={{ title: "Archive Detail" }} />
+        <RootStack.Screen name="OutfitBuilder" component={OutfitBuilderScreen} options={{ title: "Manual Curation" }} />
+        <RootStack.Screen name="OutfitDetail" component={OutfitDetailScreen} options={{ title: "Stylist Notes" }} />
+        <RootStack.Screen name="Analytics" component={AnalyticsScreen} options={{ title: "Wardrobe Metrics" }} />
+        <RootStack.Screen name="AiSearch" component={AiSearchScreen} options={{ title: "AI Search" }} />
+        <RootStack.Screen name="PremiumRecommendations" component={PremiumRecommendationsScreen} options={{ title: "Complete the Look" }} />
+        <RootStack.Screen name="Profile" component={ProfileScreen} options={{ title: "Profile" }} />
+        <RootStack.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
       </RootStack.Navigator>
     </NavigationContainer>
   );
@@ -112,3 +127,34 @@ export function RootNavigator() {
   if (status !== "authenticated") return <AuthNavigator />;
   return <AppNavigator />;
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    height: 78,
+    paddingTop: 8,
+    paddingBottom: 8,
+    backgroundColor: "rgba(13,13,12,0.96)",
+    borderTopColor: colors.border,
+    borderTopWidth: 1
+  },
+  tabLabel: {
+    fontFamily: fonts.sans,
+    fontSize: 10,
+    lineHeight: 14,
+    letterSpacing: 1.4,
+    fontWeight: "800"
+  },
+  tabLabelActive: {
+    letterSpacing: 1.8
+  },
+  tabIconWrap: {
+    minWidth: 32,
+    minHeight: 28,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  tabIconActive: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gold
+  }
+});

@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "wardrobeiq",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "splash": {
       "backgroundColor": "#0b0b0c",
       "resizeMode": "contain"
@@ -15,7 +15,16 @@
       "bundleIdentifier": "app.wardrobeiq.mobile"
     },
     "android": {
-      "package": "app.wardrobeiq.mobile"
+      "package": "app.wardrobeiq.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0b0b0c"
+      }
+    },
+    "androidStatusBar": {
+      "translucent": true,
+      "backgroundColor": "transparent",
+      "barStyle": "light-content"
     },
     "plugins": [
       "expo-secure-store"

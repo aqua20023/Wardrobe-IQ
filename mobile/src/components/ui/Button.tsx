@@ -1,5 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { colors, fonts, radii, spacing } from "../../theme/editorial";
+import { EditorialText } from "./EditorialText";
+import { PressableScale } from "./PressableScale";
 
 type ButtonProps = {
   label: string;
@@ -8,37 +11,73 @@ type ButtonProps = {
   disabled?: boolean;
   loading?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
+  style?: StyleProp<ViewStyle>;
 };
 
-const variants = {
-  primary: "bg-mist",
-  secondary: "bg-charcoal border border-graphite",
-  ghost: "bg-transparent",
-  danger: "bg-oxblood"
+const variants = StyleSheet.create({
+  primary: {
+    backgroundColor: colors.ivory,
+    borderColor: colors.ivory
+  },
+  secondary: {
+    backgroundColor: "transparent",
+    borderColor: colors.silverSoft
+  },
+  ghost: {
+    backgroundColor: "transparent",
+    borderColor: "transparent"
+  },
+  danger: {
+    backgroundColor: colors.oxblood,
+    borderColor: colors.oxblood
+  }
+});
+
+const textColors = {
+  primary: colors.black,
+  secondary: colors.ivory,
+  ghost: colors.silver,
+  danger: colors.ivory
 };
 
-const textVariants = {
-  primary: "text-ink",
-  secondary: "text-mist",
-  ghost: "text-stone",
-  danger: "text-white"
-};
+export function Button({ label, onPress, variant = "primary", disabled, loading, icon, style }: ButtonProps) {
+  const foreground = textColors[variant];
 
-export function Button({ label, onPress, variant = "primary", disabled, loading, icon }: ButtonProps) {
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       disabled={disabled || loading}
       onPress={onPress}
-      className={`h-[52px] min-h-[52px] items-center justify-center rounded-lg px-5 ${variants[variant]} ${
-        disabled || loading ? "opacity-50" : "opacity-100"
-      }`}
+      style={[styles.button, variants[variant], style]}
     >
-      <View className="flex-row items-center gap-2">
-        {loading ? <ActivityIndicator color={variant === "primary" ? "#0b0b0c" : "#f4f4f1"} /> : null}
-        {!loading && icon ? <Ionicons name={icon} size={18} color={variant === "primary" ? "#0b0b0c" : "#f4f4f1"} /> : null}
-        <Text className={`text-base font-semibold ${textVariants[variant]}`}>{label}</Text>
+      <View style={styles.content}>
+        {loading ? <ActivityIndicator color={foreground} /> : null}
+        {!loading && icon ? <Ionicons name={icon} size={18} color={foreground} /> : null}
+        <EditorialText variant="label" uppercase style={[styles.label, { color: foreground }]}>
+          {label}
+        </EditorialText>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    minHeight: 54,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radii.md,
+    borderWidth: 1,
+    paddingHorizontal: spacing.xl
+  },
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm
+  },
+  label: {
+    fontFamily: fonts.sans,
+    textAlign: "center"
+  }
+});

@@ -1,8 +1,24 @@
+import type { NavigatorScreenParams } from "@react-navigation/native";
+
 export type RootStackParamList = {
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
   AddItem: undefined;
   ClothingDetail: { itemId: string };
   OutfitBuilder: { initialItemId?: string };
+  OutfitDetail: {
+    title: string;
+    occasion?: string;
+    weather?: string;
+    confidence?: number;
+    reason?: string;
+    imageUrls?: string[];
+    itemLabels?: string[];
+  };
+  Analytics: undefined;
+  AiSearch: undefined;
+  PremiumRecommendations: undefined;
+  Profile: undefined;
+  Settings: undefined;
 };
 
 export type AuthStackParamList = {
@@ -14,8 +30,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Wardrobe: undefined;
-  Suggestions: undefined;
-  Chat: undefined;
-  Favorites: undefined;
-  Profile: undefined;
+  AIScan: undefined;
+  Outfits: undefined;
+  Assistant: undefined;
 };

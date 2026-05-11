@@ -22,7 +22,7 @@ apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) =>
   console.log("[REQ_START] method:", config.method);
   console.log("[REQ_START] baseURL:", config.baseURL);
   console.log("[REQ_START] url:", config.url);
-  console.log("[REQ_START] final full URL:", config.baseURL + config.url);
+  console.log("[REQ_START] final full URL:", `${config.baseURL ?? ""}${config.url ?? ""}`);
   console.log("[REQ_START] headers:", config.headers);
   console.log("[REQ_START] timeout:", config.timeout);
   

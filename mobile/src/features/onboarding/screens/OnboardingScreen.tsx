@@ -1,21 +1,27 @@
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Button } from "../../../components/ui/Button";
+import { EditorialText } from "../../../components/ui/EditorialText";
+import { PressableScale } from "../../../components/ui/PressableScale";
 import { Screen } from "../../../components/ui/Screen";
 import { useAuthStore } from "../../../stores/authStore";
+import { colors, radii, shadows, spacing } from "../../../theme/editorial";
 
 const slides = [
   {
-    title: "See your wardrobe clearly",
-    body: "Capture items, organize details, and keep your closet searchable from your phone."
+    eyebrow: "Private Archive",
+    title: "Your wardrobe, edited like a collection.",
+    body: "Capture each piece with context, AI metadata, and the quiet hierarchy of a fashion archive."
   },
   {
-    title: "Build outfits faster",
-    body: "Select pieces manually, save reliable combinations, and mark what you actually wear."
+    eyebrow: "Stylist Intelligence",
+    title: "Generate looks with taste, weather, and intent.",
+    body: "Occasion, mood, season, and fabric signals come together as curated outfits, not commerce tiles."
   },
   {
-    title: "Ready for smarter styling",
-    body: "The MVP stores the clean signals future recommendations and NLP prompts will need."
+    eyebrow: "Luxury AI",
+    title: "Complete the look with intelligent restraint.",
+    body: "Find the missing accessory, layer, or shoe that elevates the silhouette while preserving your style."
   }
 ];
 
@@ -27,27 +33,125 @@ export function OnboardingScreen() {
 
   return (
     <Screen scroll={false}>
-      <View className="flex-1 justify-between py-8">
+      <View style={styles.container}>
         <View>
-          <Text className="text-sm uppercase text-brass">Wardrobe IQ</Text>
-          <Text className="mt-8 text-5xl font-semibold leading-tight text-mist">{slide.title}</Text>
-          <Text className="mt-5 text-lg leading-7 text-stone">{slide.body}</Text>
+          <View style={styles.heroFrame}>
+            <View style={styles.innerFrame}>
+              <View style={styles.rail} />
+              <View style={styles.garment} />
+              <View style={styles.scanLine} />
+            </View>
+          </View>
+          <EditorialText variant="label" tone="gold" uppercase style={styles.eyebrow}>
+            {slide.eyebrow}
+          </EditorialText>
+          <EditorialText variant="hero" style={styles.title}>
+            {slide.title}
+          </EditorialText>
+          <EditorialText variant="body" tone="ivoryMuted" style={styles.body}>
+            {slide.body}
+          </EditorialText>
         </View>
 
-        <View>
-          <View className="mb-8 flex-row gap-2">
+        <View style={styles.footer}>
+          <View style={styles.dots}>
             {slides.map((_, dotIndex) => (
-              <View key={dotIndex} className={`h-1.5 flex-1 rounded-full ${dotIndex === index ? "bg-mist" : "bg-graphite"}`} />
+              <View key={dotIndex} style={[styles.dot, dotIndex === index ? styles.dotActive : null]} />
             ))}
           </View>
           <Button label={last ? "Get Started" : "Next"} icon="arrow-forward" onPress={() => (last ? completeOnboarding() : setIndex(index + 1))} />
           {!last ? (
-            <View className="mt-3">
-              <Button label="Skip" variant="ghost" onPress={completeOnboarding} />
-            </View>
+            <PressableScale onPress={completeOnboarding} style={styles.skip}>
+              <EditorialText variant="label" tone="silver" uppercase>
+                Skip
+              </EditorialText>
+            </PressableScale>
           ) : null}
         </View>
       </View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl
+  },
+  heroFrame: {
+    height: 330,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.charcoal,
+    padding: spacing.lg,
+    overflow: "hidden",
+    ...shadows.floating
+  },
+  innerFrame: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.borderWarm,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    backgroundColor: colors.espresso
+  },
+  rail: {
+    position: "absolute",
+    top: 26,
+    left: 26,
+    right: 26,
+    height: 3,
+    backgroundColor: colors.gold,
+    opacity: 0.72
+  },
+  garment: {
+    width: "58%",
+    height: "68%",
+    borderTopLeftRadius: 72,
+    borderTopRightRadius: 72,
+    backgroundColor: colors.espressoSoft,
+    borderWidth: 1,
+    borderColor: "rgba(245,242,237,0.1)"
+  },
+  scanLine: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: "45%",
+    height: 1,
+    backgroundColor: colors.gold,
+    opacity: 0.42
+  },
+  eyebrow: {
+    marginTop: spacing.xxl
+  },
+  title: {
+    marginTop: spacing.md
+  },
+  body: {
+    marginTop: spacing.lg
+  },
+  footer: {
+    gap: spacing.lg
+  },
+  dots: {
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  dot: {
+    height: 3,
+    flex: 1,
+    backgroundColor: colors.graphite
+  },
+  dotActive: {
+    backgroundColor: colors.gold
+  },
+  skip: {
+    height: 46,
+    alignItems: "center",
+    justifyContent: "center"
+  }
+});

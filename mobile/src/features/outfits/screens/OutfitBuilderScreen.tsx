@@ -1,16 +1,19 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useMemo, useState } from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../../../api/client";
 import { Button } from "../../../components/ui/Button";
 import { Chip } from "../../../components/ui/Chip";
 import { EmptyState } from "../../../components/ui/EmptyState";
+import { EditorialCard, SectionHeader } from "../../../components/ui/EditorialPrimitives";
+import { EditorialText } from "../../../components/ui/EditorialText";
 import { Input } from "../../../components/ui/Input";
 import { LoadingSkeleton } from "../../../components/ui/LoadingSkeleton";
 import { Screen } from "../../../components/ui/Screen";
 import { WardrobeItemCard } from "../../../components/ui/WardrobeItemCard";
 import type { RootStackParamList } from "../../../navigation/types";
 import { occasions } from "../../../theme/options";
+import { colors, spacing } from "../../../theme/editorial";
 import type { Occasion } from "../../../types/domain";
 import { useWardrobe } from "../../wardrobe/hooks/useWardrobe";
 import { useCreateOutfit } from "../hooks/useOutfits";
@@ -57,29 +60,38 @@ export function OutfitBuilderScreen({ route, navigation }: Props) {
 
   return (
     <Screen>
-      <Text className="text-3xl font-semibold text-mist">Build outfit</Text>
-      <Text className="mt-2 text-base leading-6 text-stone">Select pieces manually and save the combination for later.</Text>
+      <EditorialText variant="label" tone="gold" uppercase>
+        Manual Curation
+      </EditorialText>
+      <EditorialText variant="headline" style={styles.title}>
+        Build an outfit.
+      </EditorialText>
+      <EditorialText variant="bodySmall" tone="ivoryMuted" style={styles.subtitle}>
+        Select pieces manually and save the combination with the same outfit API contract.
+      </EditorialText>
 
-      <View className="mt-6 gap-4">
+      <EditorialCard style={styles.form}>
         <Input label="Outfit title" value={title} onChangeText={setTitle} placeholder="Monday office, dinner uniform" />
         <View>
-          <Text className="mb-1 text-sm font-medium text-stone">Occasion</Text>
-          <View className="flex-row flex-wrap">
+          <EditorialText variant="caption" tone="stone" uppercase>
+            Occasion
+          </EditorialText>
+          <View style={styles.wrap}>
             {occasions.map((value) => (
               <Chip key={value} label={value} selected={occasion === value} onPress={() => setOccasion(value)} />
             ))}
           </View>
         </View>
-        <Input label="Notes" value={notes} onChangeText={setNotes} multiline className="min-h-[88px] pt-4" placeholder="Why this works, fit details, styling reminders" />
-      </View>
+        <Input label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Why this works, fit details, styling reminders" />
+      </EditorialCard>
 
-      <View className="mt-8">
-        <Text className="mb-4 text-lg font-semibold text-mist">Selected pieces ({selectedItems.length})</Text>
+      <View style={styles.section}>
+        <SectionHeader title={`Selected Pieces (${selectedItems.length})`} />
         {wardrobe.isLoading ? <LoadingSkeleton rows={3} /> : null}
         {!wardrobe.isLoading && !wardrobe.data?.items.length ? (
           <EmptyState title="No wardrobe items" body="Add clothing items before building outfits." />
         ) : (
-          <View className="flex-row flex-wrap justify-between">
+          <View style={styles.grid}>
             {wardrobe.data?.items.map((item) => {
               const id = item.id ?? item._id!;
               return <WardrobeItemCard key={id} item={item} selected={selectedIds.includes(id)} onPress={() => toggle(id)} />;
@@ -88,10 +100,48 @@ export function OutfitBuilderScreen({ route, navigation }: Props) {
         )}
       </View>
 
-      {error ? <Text className="mt-3 text-sm text-oxblood">{error}</Text> : null}
-      <View className="mt-5">
+      {error ? (
+        <EditorialText variant="caption" tone="oxblood" style={styles.error}>
+          {error}
+        </EditorialText>
+      ) : null}
+      <View style={styles.action}>
         <Button label="Save Outfit" loading={createOutfit.isPending} onPress={save} icon="bookmark-outline" />
       </View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  title: {
+    marginTop: spacing.sm
+  },
+  subtitle: {
+    marginTop: spacing.sm
+  },
+  form: {
+    marginTop: spacing.xxl,
+    padding: spacing.xl,
+    gap: spacing.lg
+  },
+  wrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: spacing.sm
+  },
+  section: {
+    marginTop: spacing.section
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between"
+  },
+  error: {
+    marginTop: spacing.lg
+  },
+  action: {
+    marginTop: spacing.xl
+  }
+});
+

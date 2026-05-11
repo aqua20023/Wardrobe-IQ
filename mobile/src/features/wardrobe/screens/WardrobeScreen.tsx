@@ -1,16 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useMemo, useState } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { Chip } from "../../../components/ui/Chip";
 import { EmptyState } from "../../../components/ui/EmptyState";
-import { Input } from "../../../components/ui/Input";
+import { AppHeader } from "../../../components/ui/EditorialPrimitives";
+import { EditorialText } from "../../../components/ui/EditorialText";
 import { LoadingSkeleton } from "../../../components/ui/LoadingSkeleton";
 import { Screen } from "../../../components/ui/Screen";
 import { WardrobeItemCard } from "../../../components/ui/WardrobeItemCard";
 import type { RootStackParamList } from "../../../navigation/types";
 import { categories, categoryLabels } from "../../../theme/options";
+import { colors, fonts, radii, shadows, spacing } from "../../../theme/editorial";
 import type { WardrobeCategory } from "../../../types/domain";
 import { useWardrobe } from "../hooks/useWardrobe";
 
@@ -25,23 +27,30 @@ export function WardrobeScreen() {
   const items = wardrobe.data?.items ?? [];
 
   return (
-    <Screen scroll={false}>
-      <View className="flex-1 pt-3">
-        <View className="flex-row items-center justify-between">
-          <View>
-            <Text className="text-3xl font-semibold text-mist">Wardrobe</Text>
-            <Text className="mt-1 text-sm text-stone">{wardrobe.data?.pagination.total ?? 0} items cataloged</Text>
-          </View>
-          <Pressable onPress={() => navigation.navigate("AddItem")} className="h-12 w-12 items-center justify-center rounded-full bg-mist">
-            <Ionicons name="add" size={24} color="#0b0b0c" />
-          </Pressable>
+    <View style={styles.root}>
+      <AppHeader onMenuPress={() => navigation.navigate("Settings")} onProfilePress={() => navigation.navigate("Profile")} />
+      <Screen scroll={false} edges={["bottom", "left", "right"]}>
+        <View style={styles.hero}>
+          <EditorialText variant="headline">The Archive</EditorialText>
+          <EditorialText variant="bodySmall" tone="stone" style={styles.subtitle}>
+            {wardrobe.data?.pagination.total ?? 0} pieces cataloged with AI-readable context.
+          </EditorialText>
         </View>
 
-        <View className="mt-5">
-          <Input placeholder="Search color, tags, notes" value={search} onChangeText={setSearch} />
-        </View>
+        <Pressable style={styles.searchShell} onPress={() => navigation.navigate("AiSearch")}>
+          <Ionicons name="search-outline" size={24} color={colors.dim} />
+          <TextInput
+            placeholder="Find my black blazer..."
+            placeholderTextColor={colors.dim}
+            value={search}
+            onChangeText={setSearch}
+            style={styles.searchInput}
+            returnKeyType="search"
+          />
+          <Ionicons name="mic-outline" size={22} color={colors.gold} />
+        </Pressable>
 
-        <View className="mt-4">
+        <View style={styles.filters}>
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -57,34 +66,98 @@ export function WardrobeScreen() {
           />
         </View>
 
-        <View className="mt-4 flex-row gap-2">
-          <Chip label="Newest" selected={sort === "newest"} onPress={() => setSort("newest")} />
-          <Chip label="Most used" selected={sort === "most-used"} onPress={() => setSort("most-used")} />
+        <View style={styles.sortRow}>
+          <Chip compact label="Newest" selected={sort === "newest"} onPress={() => setSort("newest")} />
+          <Chip compact label="Most Worn" selected={sort === "most-used"} onPress={() => setSort("most-used")} />
         </View>
 
-        <View className="mt-5 flex-1">
+        <View style={styles.listWrap}>
           {wardrobe.isLoading ? <LoadingSkeleton rows={4} /> : null}
           {!wardrobe.isLoading && items.length === 0 ? (
             <EmptyState
               title="No items found"
-              body="Add a new item or change your filters."
-              actionLabel="Add Item"
-              onAction={() => navigation.navigate("AddItem")}
+              body="Add a new item or refine the archive filters."
+              actionLabel="AI Scan"
+              onAction={() => navigation.navigate("MainTabs", { screen: "AIScan" })}
             />
           ) : (
             <FlatList
               data={items}
               numColumns={2}
               keyExtractor={(item) => item.id ?? item._id!}
-              columnWrapperStyle={{ justifyContent: "space-between" }}
+              columnWrapperStyle={styles.columns}
               showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.gridContent}
               renderItem={({ item }) => (
                 <WardrobeItemCard item={item} onPress={() => navigation.navigate("ClothingDetail", { itemId: item.id ?? item._id! })} />
               )}
             />
           )}
         </View>
-      </View>
-    </Screen>
+
+        <Pressable style={styles.fab} onPress={() => navigation.navigate("MainTabs", { screen: "AIScan" })}>
+          <Ionicons name="add" size={32} color={colors.black} />
+        </Pressable>
+      </Screen>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.black
+  },
+  hero: {
+    paddingTop: spacing.md
+  },
+  subtitle: {
+    marginTop: spacing.sm
+  },
+  searchShell: {
+    marginTop: spacing.xxl,
+    minHeight: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.silverSoft,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md
+  },
+  searchInput: {
+    flex: 1,
+    color: colors.ivory,
+    fontFamily: fonts.sans,
+    fontSize: 18
+  },
+  filters: {
+    marginTop: spacing.xl,
+    minHeight: 56
+  },
+  sortRow: {
+    flexDirection: "row",
+    marginTop: spacing.sm
+  },
+  listWrap: {
+    flex: 1,
+    marginTop: spacing.xl
+  },
+  columns: {
+    justifyContent: "space-between"
+  },
+  gridContent: {
+    paddingBottom: 120
+  },
+  fab: {
+    position: "absolute",
+    right: spacing.xl,
+    bottom: spacing.xl,
+    width: 74,
+    height: 74,
+    borderRadius: radii.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.gold,
+    ...shadows.floating
+  }
+});
+

@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { colors, radii, spacing } from "../../theme/editorial";
 import { Button } from "./Button";
+import { EditorialText } from "./EditorialText";
 
 type EmptyStateProps = {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -12,15 +14,58 @@ type EmptyStateProps = {
 
 export function EmptyState({ icon = "shirt-outline", title, body, actionLabel, onAction }: EmptyStateProps) {
   return (
-    <View className="items-center justify-center rounded-lg border border-graphite bg-charcoal px-6 py-10">
-      <Ionicons name={icon} size={32} color="#e7e4dc" />
-      <Text className="mt-4 text-center text-lg font-semibold text-mist">{title}</Text>
-      {body ? <Text className="mt-2 text-center text-sm leading-5 text-stone">{body}</Text> : null}
+    <View style={styles.wrapper}>
+      <View style={styles.icon}>
+        <Ionicons name={icon} size={28} color={colors.gold} />
+      </View>
+      <EditorialText variant="headlineSmall" style={styles.title}>
+        {title}
+      </EditorialText>
+      {body ? (
+        <EditorialText variant="bodySmall" tone="stone" style={styles.body}>
+          {body}
+        </EditorialText>
+      ) : null}
       {actionLabel && onAction ? (
-        <View className="mt-5 w-full">
+        <View style={styles.action}>
           <Button label={actionLabel} onPress={onAction} />
         </View>
       ) : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.charcoal,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: 44
+  },
+  icon: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.borderWarm,
+    backgroundColor: "rgba(228,191,114,0.08)"
+  },
+  title: {
+    marginTop: spacing.lg,
+    textAlign: "center"
+  },
+  body: {
+    marginTop: spacing.sm,
+    textAlign: "center"
+  },
+  action: {
+    marginTop: spacing.xl,
+    width: "100%"
+  }
+});

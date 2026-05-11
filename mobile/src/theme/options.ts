@@ -8,7 +8,7 @@ export const categoryLabels: Record<WardrobeCategory, string> = {
   tops: "Tops",
   bottoms: "Bottoms",
   outerwear: "Outerwear",
-  shoes: "Shoes",
+  shoes: "Footwear",
   accessories: "Accessories",
   dresses: "Dresses",
   activewear: "Activewear",

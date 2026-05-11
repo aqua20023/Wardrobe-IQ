@@ -6,12 +6,12 @@ module.exports = {
     extend: {
       colors: {
         ink: "#0b0b0c",
-        charcoal: "#171719",
-        graphite: "#2a2a2d",
-        mist: "#f4f4f1",
-        stone: "#e7e4dc",
-        brass: "#b59b68",
-        oxblood: "#6f2438"
+        charcoal: "#1a1a19",
+        graphite: "#31302c",
+        mist: "#f5f2ed",
+        stone: "#aaa59c",
+        brass: "#e4bf72",
+        oxblood: "#8f3345"
       }
     }
   },
