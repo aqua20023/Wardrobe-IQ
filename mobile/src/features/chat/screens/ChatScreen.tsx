@@ -10,6 +10,8 @@ import { AppHeader } from "../../../components/ui/EditorialPrimitives";
 import { EditorialText } from "../../../components/ui/EditorialText";
 import { Screen } from "../../../components/ui/Screen";
 import type { RootStackParamList } from "../../../navigation/types";
+import { useWeatherStore } from "../../../stores/weatherStore";
+import { WeatherAtmosphere } from "../../../components/weather/WeatherEffects";
 import { colors, fonts, radii, shadows, spacing } from "../../../theme/editorial";
 
 type Message = {
@@ -56,8 +58,11 @@ export function ChatScreen() {
     }
   }
 
+  const currentWeather = useWeatherStore(state => state.currentWeather);
+
   return (
     <View style={styles.root}>
+      <WeatherAtmosphere condition={currentWeather?.type} />
       <AppHeader onMenuPress={() => navigation.navigate("Settings")} onProfilePress={() => navigation.navigate("Profile")} />
       <Screen scroll={false} edges={["bottom", "left", "right"]}>
         <View style={styles.hero}>

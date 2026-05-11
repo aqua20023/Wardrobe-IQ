@@ -19,6 +19,7 @@ import { colors, radii, spacing } from "../../../theme/editorial";
 import type { Occasion, OutfitSuggestion } from "../../../types/domain";
 import { useWeatherStore } from "../../../stores/weatherStore";
 import { useCreateOutfit, useOutfitFeedback, useOutfitSuggestions } from "../hooks/useOutfits";
+import { WeatherAtmosphere } from "../../../components/weather/WeatherEffects";
 
 const weatherOptions = ["Rainy", "Cold", "Sunny", "Evening"];
 const styleOptions = ["Editorial", "Minimal", "Classic", "Romantic"];
@@ -89,6 +90,7 @@ export function OutfitSuggestionsScreen() {
 
   return (
     <View style={styles.root}>
+      <WeatherAtmosphere condition={currentWeather?.type} />
       <AppHeader onMenuPress={() => navigation.navigate("Settings")} onProfilePress={() => navigation.navigate("Profile")} />
       <Screen edges={["bottom", "left", "right"]}>
         <View style={styles.hero}>

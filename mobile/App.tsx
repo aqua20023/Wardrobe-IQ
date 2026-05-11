@@ -5,13 +5,16 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { queryClient } from "./src/api/queryClient";
 import { RootNavigator } from "./src/navigation/RootNavigator";
+import { AtmosphereProvider } from "./src/providers/AtmosphereProvider";
 
 export default function App() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <StatusBar style="light" translucent />
-        <RootNavigator />
+        <AtmosphereProvider>
+          <StatusBar style="light" translucent />
+          <RootNavigator />
+        </AtmosphereProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
   );

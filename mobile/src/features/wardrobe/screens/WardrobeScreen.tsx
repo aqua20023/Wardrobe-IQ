@@ -14,6 +14,8 @@ import type { RootStackParamList } from "../../../navigation/types";
 import { categories, categoryLabels } from "../../../theme/options";
 import { colors, fonts, radii, shadows, spacing } from "../../../theme/editorial";
 import type { WardrobeCategory } from "../../../types/domain";
+import { useWeatherStore } from "../../../stores/weatherStore";
+import { WeatherAtmosphere } from "../../../components/weather/WeatherEffects";
 import { useWardrobe } from "../hooks/useWardrobe";
 
 export function WardrobeScreen() {
@@ -26,8 +28,11 @@ export function WardrobeScreen() {
   const wardrobe = useWardrobe(query);
   const items = wardrobe.data?.items ?? [];
 
+  const currentWeather = useWeatherStore(state => state.currentWeather);
+
   return (
     <View style={styles.root}>
+      <WeatherAtmosphere condition={currentWeather?.type} />
       <AppHeader onMenuPress={() => navigation.navigate("Settings")} onProfilePress={() => navigation.navigate("Profile")} />
       <Screen scroll={false} edges={["bottom", "left", "right"]}>
         <View style={styles.hero}>

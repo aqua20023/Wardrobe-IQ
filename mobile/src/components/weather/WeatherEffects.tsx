@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { StyleSheet, View, Dimensions } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, { 
   useAnimatedStyle, 
   withRepeat, 
@@ -7,43 +8,71 @@ import Animated, {
   withSequence,
   withDelay,
   useSharedValue,
-  Easing
+  Easing,
+  interpolateColor,
+  useDerivedValue
 } from "react-native-reanimated";
 import { type WeatherCondition } from "../../api/weather";
 import { colors } from "../../theme/editorial";
+import { useAtmosphere } from "../../providers/AtmosphereProvider";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export function WeatherAtmosphere({ condition }: { condition?: WeatherCondition }) {
-  if (!condition || condition === "unknown") return null;
+  const { theme, weatherOverride } = useAtmosphere();
+  
+  // Resolve active color vectors
+  const particleColor = weatherOverride?.ambientColor || theme.particleColor;
+  const activeOpacity = theme.ambientOpacity + (weatherOverride?.extraOpacity || 0);
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      {condition === "rainy" && <RainEffect />}
-      {condition === "snowy" && <SnowEffect />}
-      {condition === "sunny" && <SunEffect />}
+      {/* Base Time Gradient */}
+      {theme.gradient.some(c => c !== "transparent") && (
+        <LinearGradient
+          colors={theme.gradient}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+      )}
+
+      {/* Weather Tints */}
+      {weatherOverride?.tint && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: weatherOverride.tint }]} />
+      )}
+
+      {/* Dynamic Weather Particles Layer */}
+      {condition === "rainy" && <RainEffect color={particleColor} />}
+      {condition === "snowy" && <SnowEffect color={particleColor} />}
+      {condition === "sunny" && <SunEffect glowColor={theme.glowColor || colors.gold} />}
       {condition === "cloudy" && <CloudEffect />}
       {condition === "misty" && <CloudEffect isFog />}
       {condition === "stormy" && <StormEffect />}
+
+      {/* Master Ambient Vignette / Fade */}
+      {activeOpacity > 0 && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.ambientColor, opacity: activeOpacity * 0.5 }]} />
+      )}
     </View>
   );
 }
 
-function RainEffect() {
-  const count = 15; // Moderate particles for battery perf
+function RainEffect({ color }: { color: string }) {
+  const count = 12;
   return (
     <View style={StyleSheet.absoluteFill}>
       {Array.from({ length: count }).map((_, i) => (
-        <RainDrop key={i} delay={i * 200} />
+        <RainDrop key={i} delay={i * 250} color={color} />
       ))}
     </View>
   );
 }
 
-function RainDrop({ delay }: { delay: number }) {
-  const translateY = useSharedValue(-20);
+function RainDrop({ delay, color }: { delay: number, color: string }) {
+  const translateY = useSharedValue(-40);
   const left = useMemo(() => Math.random() * SCREEN_WIDTH, []);
-  const duration = useMemo(() => 800 + Math.random() * 400, []);
+  const duration = useMemo(() => 700 + Math.random() * 300, []);
 
   useEffect(() => {
     translateY.value = withDelay(
@@ -68,9 +97,9 @@ function RainDrop({ delay }: { delay: number }) {
           top: 0,
           left,
           width: 1,
-          height: 20,
-          backgroundColor: colors.silverSoft,
-          opacity: 0.25,
+          height: 30,
+          backgroundColor: color || colors.silverSoft,
+          opacity: 0.18,
         },
         animatedStyle,
       ]}
@@ -78,24 +107,24 @@ function RainDrop({ delay }: { delay: number }) {
   );
 }
 
-function SnowEffect() {
-  const count = 12;
+function SnowEffect({ color }: { color: string }) {
+  const count = 10;
   return (
     <View style={StyleSheet.absoluteFill}>
       {Array.from({ length: count }).map((_, i) => (
-        <SnowFlake key={i} delay={i * 400} />
+        <SnowFlake key={i} delay={i * 500} color={color} />
       ))}
     </View>
   );
 }
 
-function SnowFlake({ delay }: { delay: number }) {
+function SnowFlake({ delay, color }: { delay: number, color: string }) {
   const translateY = useSharedValue(-10);
   const translateX = useSharedValue(0);
   const left = useMemo(() => Math.random() * SCREEN_WIDTH, []);
-  const duration = useMemo(() => 4000 + Math.random() * 3000, []);
-  const drift = useMemo(() => 20 + Math.random() * 30, []);
-  const size = useMemo(() => 2 + Math.random() * 3, []);
+  const duration = useMemo(() => 4500 + Math.random() * 3000, []);
+  const drift = useMemo(() => 20 + Math.random() * 20, []);
+  const size = useMemo(() => 1.5 + Math.random() * 2.5, []);
 
   useEffect(() => {
     translateY.value = withDelay(
@@ -133,8 +162,8 @@ function SnowFlake({ delay }: { delay: number }) {
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: colors.ivory,
-          opacity: 0.3,
+          backgroundColor: color || colors.ivory,
+          opacity: 0.25,
         },
         animatedStyle,
       ]}
@@ -142,12 +171,12 @@ function SnowFlake({ delay }: { delay: number }) {
   );
 }
 
-function SunEffect() {
+function SunEffect({ glowColor }: { glowColor: string }) {
   const pulse = useSharedValue(1);
 
   useEffect(() => {
     pulse.value = withRepeat(
-      withTiming(1.12, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
+      withTiming(1.15, { duration: 4000, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
@@ -155,7 +184,7 @@ function SunEffect() {
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulse.value }],
-    opacity: 0.05 + (pulse.value - 1) * 0.2 // very faint ambient
+    opacity: 0.03 + (pulse.value - 1) * 0.15 
   }));
 
   return (
@@ -163,12 +192,12 @@ function SunEffect() {
       style={[
         {
           position: "absolute",
-          top: -100,
+          top: -120,
           right: -100,
-          width: 300,
-          height: 300,
-          borderRadius: 150,
-          backgroundColor: colors.gold,
+          width: 280,
+          height: 280,
+          borderRadius: 140,
+          backgroundColor: glowColor,
         },
         animatedStyle
       ]}
@@ -177,11 +206,11 @@ function SunEffect() {
 }
 
 function CloudEffect({ isFog = false }: { isFog?: boolean }) {
-  const translate = useSharedValue(-150);
+  const translate = useSharedValue(-200);
 
   useEffect(() => {
     translate.value = withRepeat(
-      withTiming(SCREEN_WIDTH, { duration: isFog ? 15000 : 25000, easing: Easing.linear }),
+      withTiming(SCREEN_WIDTH + 50, { duration: isFog ? 18000 : 30000, easing: Easing.linear }),
       -1,
       false
     );
@@ -196,13 +225,12 @@ function CloudEffect({ isFog = false }: { isFog?: boolean }) {
       style={[
         {
           position: "absolute",
-          top: isFog ? "40%" : 20,
-          width: 200,
-          height: isFog ? 200 : 100,
-          borderRadius: 100,
+          top: isFog ? "35%" : 30,
+          width: 220,
+          height: isFog ? 240 : 120,
+          borderRadius: 110,
           backgroundColor: colors.graphite,
-          opacity: isFog ? 0.15 : 0.08,
-          // Using dynamic opacity creates the mist feel
+          opacity: isFog ? 0.12 : 0.06,
         },
         animatedStyle
       ]}
@@ -216,19 +244,20 @@ function StormEffect() {
   useEffect(() => {
     const triggerFlash = () => {
       opacity.value = withSequence(
-        withTiming(0.15, { duration: 50 }),
-        withTiming(0, { duration: 100 }),
-        withDelay(100, withTiming(0.1, { duration: 50 })),
-        withTiming(0, { duration: 300 })
+        withTiming(0.12, { duration: 50 }),
+        withTiming(0, { duration: 120 }),
+        withDelay(80, withTiming(0.08, { duration: 40 })),
+        withTiming(0, { duration: 400 })
       );
-      // Random intervals between 4 to 10 seconds
-      const next = 4000 + Math.random() * 6000;
+      const next = 5000 + Math.random() * 7000;
       const timer = setTimeout(triggerFlash, next);
       return () => clearTimeout(timer);
     };
     
-    const cleanup = triggerFlash();
-    return typeof cleanup === "function" ? cleanup : undefined;
+    const timerId = triggerFlash();
+    return () => {
+      if (typeof timerId === "function") timerId();
+    };
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
